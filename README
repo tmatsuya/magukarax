@@ -13,7 +13,6 @@ magukaraX project (Work In Progress)
 [> Building tools
 You will need:
  - Xilinx Vivado 2014.1
- - Ten Gigabit Ethernet PCS/PMA Lincese (included Kintex-7 FPGA Connectivity Kit)
 
 [> How to build
 1- cd boards/kc705/synthesis
