@@ -6,7 +6,7 @@ CMD_FILE=/tmp/$USER_$$
 #PROJECT=$1
 PROJECT=top
 
-cd runs/magukarax.runs/impl_1
+cd runs/$PROJECT.runs/impl_1
 
 echo setMode -bscan >$CMD_FILE
 echo setCable -p auto >>$CMD_FILE

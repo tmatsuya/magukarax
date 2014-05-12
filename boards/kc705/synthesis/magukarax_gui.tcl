@@ -1,5 +1,5 @@
 # PlanAhead Launch Script
-set design_top magukarax
+set design_top top
 set sim_top board
 set device xc7k325t-2-ffg900
 set proj_dir runs 
@@ -26,6 +26,7 @@ read_verilog "../rtl/network_path/xgbaser_gt_same_quad_wrapper.v"
 read_verilog "../rtl/network_path/network_path.v"
 read_verilog "../rtl/network_path/ten_gig_eth_pcs_pma_ip_GT_Common_wrapper.v"
 read_verilog "../rtl/top.v"
+read_verilog "../rtl/measure.v"
 
 # NGC files
 #read_edif "../ip_cores/dma/netlist/eval/dma_back_end_axi.ngc"

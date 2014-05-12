@@ -327,44 +327,48 @@ xgbaser_gt_same_quad_wrapper xgbaser_gt_wrapper_inst_0 (
 `endif    //USE_DIFF_QUAD
 
 
+// ---------------
+// Measure
+// ---------------
+measure measure_inst (
+  .sys_rst(sys_rst),
+  .sys_clk(clk156),
 
-reg [31:0] tx_counter;
-reg [63:0] txd;
-reg [7:0] txc;
-always @(posedge clk156) begin
-        if ( sys_rst ) begin
-                tx_counter <= 32'h0;
-                txd <= 64'h0707070707070707;
-                txc <= 8'hff;
-        end else begin
-                tx_counter <= tx_counter + 32'h8;
-                case (tx_counter[15:0] )
-                        16'h00: {txc, txd} <= {8'h01, 64'hd5_55_55_55_55_55_55_fb};
-                        16'h08: {txc, txd} <= {8'h00, 64'hde_a0_00_d6_7b_1d_25_11};
-                        16'h10: {txc, txd} <= {8'h00, 64'h00_00_45_00_08_e8_07_1c};
-                        16'h18: {txc, txd} <= {8'h00, 64'h44_01_40_00_00_99_f8_54};
-                        16'h20: {txc, txd} <= {8'h00, 64'h16_00_0a_69_15_00_0a_9d};
-                        16'h28: {txc, txd} <= {8'h00, 64'h00_07_b8_45_d5_00_08_64};
-                        16'h30: {txc, txd} <= {8'h00, 64'hab_05_00_06_84_ac_4f_07};
-                        16'h38: {txc, txd} <= {8'h00, 64'h0e_0d_0c_0b_0a_09_08_f0};
-                        16'h40: {txc, txd} <= {8'h00, 64'h16_15_14_13_12_11_10_0f};
-                        16'h48: {txc, txd} <= {8'h00, 64'h1e_1d_1c_1b_1a_19_18_17};
-                        16'h50: {txc, txd} <= {8'h00, 64'h26_25_24_23_22_21_20_1f};
-                        16'h58: {txc, txd} <= {8'h00, 64'h2e_2d_2c_2b_2a_29_28_27};
-                        16'h60: {txc, txd} <= {8'h00, 64'h36_35_34_33_32_31_30_2f};
-                        16'h68: {txc, txd} <= {8'he0, 64'h07_07_fd_ba_fc_4f_47_37};
-                        default: begin
-                                {txc, txd} <= {8'hff, 64'h07_07_07_07_07_07_07_07};
-                        end
-                endcase
-        end
-end
+  .xgmii_0_txd(xgmii0_txd),
+  .xgmii_0_txc(xgmii0_txc),
+  .xgmii_0_rxd(xgmii0_rxd),
+  .xgmii_0_rxc(xgmii0_rxc),
 
+  .xgmii_1_txd(xgmii1_txd),
+  .xgmii_1_txc(xgmii1_txc),
+  .xgmii_1_rxd(xgmii1_rxd),
+  .xgmii_1_rxc(xgmii1_rxc),
 
-assign xgmii0_txd = txd;
-assign xgmii0_txc = txc;
-assign xgmii1_txd = txd;
-assign xgmii1_txc = txc;
+  .tx0_enable(tx0_enable),
+  .tx0_ipv6(tx0_ipv6),
+  .tx0_fullroute(tx0_fullroute),
+  .tx0_req_arp(tx0_req_arp),
+  .tx0_frame_len(tx0_frame_len),
+  .tx0_inter_frame_gap(tx0_inter_frame_gap),
+  .tx0_ipv4_srcip(tx0_ipv4_srcip),
+  .tx0_src_mac(tx0_src_mac),
+  .tx0_ipv4_gwip(tx0_ipv4_gwip),
+  .tx0_ipv6_srcip(tx0_ipv6_srcip),
+  .tx0_ipv6_dstip(tx0_ipv6_dstip),
+  .tx0_dst_mac(tx0_dst_mac),
+  .tx0_ipv4_dstip(tx0_ipv4_dstip),
+  .tx0_pps(tx0_pps),
+  .tx0_throughput(tx0_throughput),
+  .tx0_ipv4_ip(tx0_ipv4_ip),
+
+  .rx1_pps(rx1_pps),
+  .rx1_throughput(rx1_throughput),
+  .rx1_latency(rx1_latency),
+  .rx1_ipv4_ip(rx1_ipv4_ip),
+
+  .global_counter(global_counter),
+  .count_2976_latency(count_2976_latency)
+);
 
 
 assign led[0] = xphy0_status[0]; 

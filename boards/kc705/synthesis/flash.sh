@@ -5,7 +5,7 @@ CMD_FILE=/tmp/$USER_$$
 #PROJECT=$1
 PROJECT=top
 
-cd runs/magukarax.runs/impl_1
+cd runs/$PROJECT.runs/impl_1
 
 promgen -w -p mcs -c FF -data_width 16 -s 131072 -u 0 $PROJECT
 
