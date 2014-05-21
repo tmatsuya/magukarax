@@ -67,21 +67,32 @@ module measure (
 // One second clock
 //-----------------------------------
 reg sec_oneshot;
-reg [26:0] sec_counter;
+reg [27:0] sec_counter;
 always @(posedge sys_clk) begin
   if (sys_rst) begin
-    sec_counter <= 27'd156250000;
+    sec_counter <= 28'd156250000;
     sec_oneshot <= 1'b0;
   end else begin
     if (sec_counter == 27'd0) begin
-      sec_counter <= 27'd156250000;
+      sec_counter <= 28'd156250000;
       sec_oneshot <= 1'b1;
     end else begin
-      sec_counter <= sec_counter - 27'd1;
+      sec_counter <= sec_counter - 28'd1;
       sec_oneshot <= 1'b0;
     end
   end
 end
+
+//-----------------------------------
+// CRC logic
+//-----------------------------------
+crc32_d64 crc32_d64_inst (
+  .rst(sys_rst),
+  .clk(sys_clk),
+  .crc_en(),
+  .data_in(),	// 64bit
+  .crc_out()	// 32bit
+);
 
 //-----------------------------------
 // Transmitte logic
