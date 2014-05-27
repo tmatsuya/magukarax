@@ -16,6 +16,7 @@ module measure (
   input  [63:0] xgmii_1_rxd,
   input  [7:0]  xgmii_1_rxc,
 
+`ifdef NO
   output [63:0] xgmii_2_txd,
   output [7:0]  xgmii_2_txc,
   input  [63:0] xgmii_2_rxd,
@@ -25,7 +26,9 @@ module measure (
   output [7:0]  xgmii_3_txc,
   input  [63:0] xgmii_3_rxd,
   input  [7:0]  xgmii_3_rxc,
+`endif
 
+`ifdef NO
   // PCI user registers
   input         tx0_enable,
   input         tx0_ipv6,
@@ -58,9 +61,9 @@ module measure (
   output [31:0] rx3_throughput,
   output [23:0] rx3_latency,
   output [31:0] rx3_ipv4_ip,
+`endif
 
-  output reg [31:0] global_counter,
-  output [31:0] count_2976_latency
+  output reg [31:0] global_counter
 );
 
 //-----------------------------------
@@ -84,40 +87,35 @@ always @(posedge sys_clk) begin
 end
 
 //-----------------------------------
-// CRC logic
-//-----------------------------------
-crc32_d64 crc32_d64_inst (
-  .rst(sys_rst),
-  .clk(sys_clk),
-  .crc_en(),
-  .data_in(),	// 64bit
-  .crc_out()	// 32bit
-);
-
-//-----------------------------------
 // Transmitte logic
 //-----------------------------------
-reg [15:0] tx_count = 16'h0;
-reg [7:0] tx_data;
-reg tx_en = 1'b0;
+reg [31:0] tx_counter;
+reg [63:0] txd;
+reg [7:0] txc;
 
 //-----------------------------------
-// CRC
+// CRC logic
 //-----------------------------------
-assign crc_init = (tx_count ==  16'h08);
-wire [31:0] crc_out;
-reg crc_rd;
-assign crc_data_en = ~crc_rd;
-//crc_gen crc_inst (
-//  .Reset(sys_rst),
-//  .Clk(sys_clk),
-//  .Init(crc_init),
-//  .Frame_data(tx_data),
-//  .Data_en(crc_data_en),
-//  .CRC_rd(crc_rd),
-//  .CRC_end(),
-//  .CRC_out(crc_out)
-//); 
+reg crc_init = 1'b0;
+assign crc_data_en = ~crc_init;
+wire [31:0] crc_out, crc_out2;
+assign crc_out2 = ~{ crc_out[24],crc_out[25],crc_out[26],crc_out[27],crc_out[28],crc_out[29],crc_out[30],crc_out[31], crc_out[16],crc_out[17],crc_out[18],crc_out[19],crc_out[20],crc_out[21],crc_out[22],crc_out[23], crc_out[ 8],crc_out[ 9],crc_out[10],crc_out[11],crc_out[12],crc_out[13],crc_out[14],crc_out[15], crc_out[ 0],crc_out[ 1],crc_out[ 2],crc_out[ 3],crc_out[ 4],crc_out[ 5],crc_out[ 6],crc_out[ 7] };
+
+crc32_d64 crc32_d64_inst (
+  .rst(crc_init),
+  .clk(sys_clk),
+  .crc_en(crc_data_en),
+  .data_in({
+txd[00],txd[01],txd[02],txd[03],txd[04],txd[05],txd[06],txd[07],txd[08],txd[09],
+txd[10],txd[11],txd[12],txd[13],txd[14],txd[15],txd[16],txd[17],txd[18],txd[19],
+txd[20],txd[21],txd[22],txd[23],txd[24],txd[25],txd[26],txd[27],txd[28],txd[29],
+txd[30],txd[31],txd[32],txd[33],txd[34],txd[35],txd[36],txd[37],txd[38],txd[39],
+txd[40],txd[41],txd[42],txd[43],txd[44],txd[45],txd[46],txd[47],txd[48],txd[49],
+txd[50],txd[51],txd[52],txd[53],txd[54],txd[55],txd[56],txd[57],txd[58],txd[59],
+txd[60],txd[61],txd[62],txd[63]
+}),	// 64bit
+  .crc_out(crc_out)	// 32bit
+);
 
 //-----------------------------------
 // Global counter
@@ -131,19 +129,23 @@ always @(posedge sys_clk) begin
 end
 
 
-reg [31:0] tx_counter;
-reg [63:0] txd;
-reg [7:0] txc;
 always @(posedge sys_clk) begin
         if ( sys_rst ) begin
+		crc_init <= 1'b0;
                 tx_counter <= 32'h0;
                 txd <= 64'h0707070707070707;
                 txc <= 8'hff;
         end else begin
                 tx_counter <= tx_counter + 32'h8;
                 case (tx_counter[15:0] )
-                        16'h00: {txc, txd} <= {8'h01, 64'hd5_55_55_55_55_55_55_fb};
-                        16'h08: {txc, txd} <= {8'h00, 64'hde_a0_00_d6_7b_1d_25_11};
+                        16'h00: begin
+				{txc, txd} <= {8'h01, 64'hd5_55_55_55_55_55_55_fb};
+				crc_init <= 1'b1;
+			end
+                        16'h08: begin
+				{txc, txd} <= {8'h00, 64'hde_a0_00_d6_7b_1d_25_11};
+				crc_init <= 1'b0;
+			end
                         16'h10: {txc, txd} <= {8'h00, 64'h00_00_45_00_08_e8_07_1c};
                         16'h18: {txc, txd} <= {8'h00, 64'h44_01_40_00_00_99_f8_54};
                         16'h20: {txc, txd} <= {8'h00, 64'h16_00_0a_69_15_00_0a_9d};
@@ -156,6 +158,7 @@ always @(posedge sys_clk) begin
                         16'h58: {txc, txd} <= {8'h00, 64'h2e_2d_2c_2b_2a_29_28_27};
                         16'h60: {txc, txd} <= {8'h00, 64'h36_35_34_33_32_31_30_2f};
                         16'h68: {txc, txd} <= {8'he0, 64'h07_07_fd_ba_fc_4f_47_37};
+//                      16'h68: {txc, txd} <= {8'hfe, 64'h07_07_fd_ba_fc_4f_47_37};
                         default: begin
                                 {txc, txd} <= {8'hff, 64'h07_07_07_07_07_07_07_07};
                         end

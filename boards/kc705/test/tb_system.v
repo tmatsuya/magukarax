@@ -49,17 +49,7 @@ measure measure_inst (
 	.xgmii_1_txd(xgmii_1_txd),
 	.xgmii_1_txc(xgmii_1_txc),
 	.xgmii_1_rxd(xgmii_1_rxd),
-	.xgmii_1_rxc(xgmii_1_rxc),
-
-	.xgmii_2_txd(xgmii_2_txd),
-	.xgmii_2_txc(xgmii_2_txc),
-	.xgmii_2_rxd(xgmii_2_rxd),
-	.xgmii_2_rxc(xgmii_2_rxc),
-
-	.xgmii_3_txd(xgmii_3_txd),
-	.xgmii_3_txc(xgmii_3_txc),
-	.xgmii_3_rxd(xgmii_3_rxd),
-	.xgmii_3_rxc(xgmii_3_rxc)
+	.xgmii_1_rxc(xgmii_1_rxc)
 );
 
 task waitclock;

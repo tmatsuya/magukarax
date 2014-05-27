@@ -344,6 +344,7 @@ measure measure_inst (
   .xgmii_1_rxd(xgmii1_rxd),
   .xgmii_1_rxc(xgmii1_rxc),
 
+`ifdef NO
   .tx0_enable(tx0_enable),
   .tx0_ipv6(tx0_ipv6),
   .tx0_fullroute(tx0_fullroute),
@@ -365,9 +366,9 @@ measure measure_inst (
   .rx1_throughput(rx1_throughput),
   .rx1_latency(rx1_latency),
   .rx1_ipv4_ip(rx1_ipv4_ip),
+`endif
 
-  .global_counter(global_counter),
-  .count_2976_latency(count_2976_latency)
+  .global_counter(global_counter)
 );
 
 
