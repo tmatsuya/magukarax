@@ -102,7 +102,7 @@ assign crc_out2 = ~{ crc_out[24],crc_out[25],crc_out[26],crc_out[27],crc_out[28]
 
 crc32_d64 crc32_d64_inst (
   .rst(crc_init),
-  .clk(sys_clk),
+  .clk(~sys_clk),
   .crc_en(crc_data_en),
   .data_in({
 txd[00],txd[01],txd[02],txd[03],txd[04],txd[05],txd[06],txd[07],txd[08],txd[09],
