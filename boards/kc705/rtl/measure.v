@@ -89,20 +89,21 @@ end
 // Transmitte logic
 //-----------------------------------
 reg [31:0] tx_counter;
-reg [63:0] txd;
-reg [7:0] txc;
+reg [63:0] txd, txd2;
+reg [7:0] txc, txc2;
 
 //-----------------------------------
 // CRC logic
 //-----------------------------------
 reg crc_init = 1'b0;
+reg crc_rewrite = 1'b0;
 assign crc_data_en = ~crc_init;
 wire [31:0] crc_out, crc_out2;
 assign crc_out2 = ~{ crc_out[24],crc_out[25],crc_out[26],crc_out[27],crc_out[28],crc_out[29],crc_out[30],crc_out[31], crc_out[16],crc_out[17],crc_out[18],crc_out[19],crc_out[20],crc_out[21],crc_out[22],crc_out[23], crc_out[ 8],crc_out[ 9],crc_out[10],crc_out[11],crc_out[12],crc_out[13],crc_out[14],crc_out[15], crc_out[ 0],crc_out[ 1],crc_out[ 2],crc_out[ 3],crc_out[ 4],crc_out[ 5],crc_out[ 6],crc_out[ 7] };
 
 crc32_d64 crc32_d64_inst (
   .rst(crc_init),
-  .clk(~sys_clk),
+  .clk(sys_clk),
   .crc_en(crc_data_en),
   .data_in({
 txd[00],txd[01],txd[02],txd[03],txd[04],txd[05],txd[06],txd[07],txd[08],txd[09],
@@ -159,19 +160,24 @@ wire [15:0] tx0_udp_len = tx0_frame_len - 16'h26;  // UDP Length
 wire [15:0] tx0_ip_len  = tx0_frame_len - 16'd18;  // IP Length (Frame Len - FCS Len - EtherFrame Len
 
 reg [23:0] tmp_counter;
-reg [31:0] crc_out3;
 
 always @(posedge sys_clk) begin
         if ( sys_rst ) begin
 		crc_init <= 1'b0;
+		crc_rewrite <= 1'b0;
                 tx_counter <= 32'h0;
 		tmp_counter <= 24'h0;
                 txd <= 64'h0707070707070707;
                 txc <= 8'hff;
   		tx0_dst_mac <= 48'hffffffffffff;
         end else begin
+		crc_rewrite <= 1'b0;
+		txc2 <= txc;
+		if (crc_rewrite == 1'b0)
+			txd2 <= txd;
+		else
+			txd2 <= {txd[63:32], crc_out2[7:0], crc_out2[15:8], crc_out2[23:16], crc_out2[31:24]};
                 tx_counter <= tx_counter + 32'h8;
-		crc_out3 <= crc_out2;
                 case (tx_counter[15:0] )
                         16'h00: begin
 				{txc, txd} <= {8'h01, 64'hd5_55_55_55_55_55_55_fb};
@@ -193,7 +199,10 @@ always @(posedge sys_clk) begin
 				tmp_counter[23:0] <= global_counter[23:0];
 			end
                         16'h38: {txc, txd} <= {8'h00, 40'h00_00_00_00_00, tmp_counter[7:0], tmp_counter[15:8], tmp_counter[23:16]};
-                        16'h40: {txc, txd} <= {8'hf0, 32'h07_07_07_fd, crc_out2[7:0], crc_out2[15:8], crc_out2[23:16], crc_out2[31:24]};
+                        16'h40: begin
+				{txc, txd} <= {8'hf0, 32'h07_07_07_fd, crc_out2[7:0], crc_out2[15:8], crc_out2[23:16], crc_out2[31:24]};
+				crc_rewrite <= 1'b1;
+			end
                         default: begin
                                 {txc, txd} <= {8'hff, 64'h07_07_07_07_07_07_07_07};
                         end
@@ -201,9 +210,9 @@ always @(posedge sys_clk) begin
         end
 end
 
-assign xgmii_0_txd = txd;
-assign xgmii_0_txc = txc;
-assign xgmii_1_txd = txd;
-assign xgmii_1_txc = txc;
+assign xgmii_0_txd = txd2;
+assign xgmii_0_txc = txc2;
+assign xgmii_1_txd = txd2;
+assign xgmii_1_txc = txc2;
 
 endmodule
