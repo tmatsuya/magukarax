@@ -49,7 +49,25 @@ measure measure_inst (
 	.xgmii_1_txd(xgmii_1_txd),
 	.xgmii_1_txc(xgmii_1_txc),
 	.xgmii_1_rxd(xgmii_1_rxd),
-	.xgmii_1_rxc(xgmii_1_rxc)
+	.xgmii_1_rxc(xgmii_1_rxc),
+
+  // PCI user register
+	.tx0_enable(1'b1),
+	.tx0_ipv6(1'b0),
+	.tx0_fullroute(1'b0),
+	.tx0_req_arp(1'b0),
+	.tx0_frame_len(16'd64),
+	.tx0_inter_frame_gap(32'd12),
+	.tx0_ipv4_srcip({8'd192, 8'd168, 8'd1, 8'd101}),
+	.tx0_src_mac(48'h001122_334455),
+	.tx0_ipv4_gwip({8'd192, 8'd168, 8'd1, 8'd1}),
+	.tx0_ipv6_srcip(),
+	.tx0_ipv6_dstip(),
+	.tx0_dst_mac(),
+	.tx0_ipv4_dstip({8'd192, 8'd168, 8'd2, 8'd102}),
+	.tx0_pps(),
+	.tx0_throughput(),
+	.tx0_ipv4_ip()
 );
 
 task waitclock;

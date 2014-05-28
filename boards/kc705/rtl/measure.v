@@ -1,4 +1,5 @@
 `timescale 1ns / 1ps
+`include "../rtl/setup.v"
 //`define DEBUG
 
 module measure (
@@ -28,7 +29,6 @@ module measure (
   input  [7:0]  xgmii_3_rxc,
 `endif
 
-`ifdef NO
   // PCI user registers
   input         tx0_enable,
   input         tx0_ipv6,
@@ -61,7 +61,6 @@ module measure (
   output [31:0] rx3_throughput,
   output [23:0] rx3_latency,
   output [31:0] rx3_ipv4_ip,
-`endif
 
   output reg [31:0] global_counter
 );
@@ -129,36 +128,70 @@ always @(posedge sys_clk) begin
 end
 
 
+//-----------------------------------
+// scenario parameter
+//-----------------------------------
+wire [39:0] magic_code       = `MAGIC_CODE;
+reg [16:0] ipv4_id           = 16'h0;
+reg [7:0]  ipv4_ttl          = 8'h40;      // IPv4: default TTL value (default: 64)
+reg [31:0] pps;
+reg [31:0] throughput;
+reg [23:0] full_ipv4;
+reg [23:0] ip_sum;
+reg [15:0] arp_wait_count;
+
+wire [15:0] frame_crc1_count = tx0_frame_len + 16'h4;
+wire [15:0] frame_crc2_count = tx0_frame_len + 16'h5;
+wire [15:0] frame_crc3_count = tx0_frame_len + 16'h6;
+wire [15:0] frame_crc4_count = tx0_frame_len + 16'h7;
+wire [15:0] frame_end_count  = tx0_frame_len + 16'h8;
+
+reg [2:0] tx_state;
+reg [31:0] gap_count;
+parameter TX_REQ_ARP     = 3'h0;  // Send ARP request
+parameter TX_WAIT_ARPREP = 3'h1;  // Wait ARP reply
+parameter TX_V4_SEND     = 3'h2;  // IPv4 Payload
+parameter TX_V6_SEND     = 3'h3;  // IPv6 Payload
+parameter TX_GAP         = 3'h4;  // Inter Frame Gap
+
+wire [31:0] ipv4_dstip = (tx0_fullroute == 1'b0) ? tx0_ipv4_dstip[31:0] : {full_ipv4[23:0],8'h1};  // IPv4: Destination Address
+wire [15:0] tx0_udp_len = tx0_frame_len - 16'h26;  // UDP Length
+wire [15:0] tx0_ip_len  = tx0_frame_len - 16'd18;  // IP Length (Frame Len - FCS Len - EtherFrame Len
+
+reg [23:0] tmp_counter;
+
 always @(posedge sys_clk) begin
         if ( sys_rst ) begin
 		crc_init <= 1'b0;
                 tx_counter <= 32'h0;
+		tmp_counter <= 24'h0;
                 txd <= 64'h0707070707070707;
                 txc <= 8'hff;
+  		tx0_dst_mac <= 48'hffffffffffff;
         end else begin
                 tx_counter <= tx_counter + 32'h8;
                 case (tx_counter[15:0] )
                         16'h00: begin
 				{txc, txd} <= {8'h01, 64'hd5_55_55_55_55_55_55_fb};
+				ip_sum <= 16'h4500 + {4'h0,tx0_ip_len[11:0]} + ipv4_id[15:0] + {ipv4_ttl[7:0],8'h11} + tx0_ipv4_srcip[31:16] + tx0_ipv4_srcip[15:0] + ipv4_dstip[31:16] + ipv4_dstip[15:0];
+        if (tx0_enable == 1'b1)
+
 				crc_init <= 1'b1;
 			end
                         16'h08: begin
-				{txc, txd} <= {8'h00, 64'hde_a0_00_d6_7b_1d_25_11};
+				{txc, txd} <= {8'h00, tx0_src_mac[15:00], tx0_dst_mac[47: 0]};
 				crc_init <= 1'b0;
 			end
-                        16'h10: {txc, txd} <= {8'h00, 64'h00_00_45_00_08_e8_07_1c};
-                        16'h18: {txc, txd} <= {8'h00, 64'h44_01_40_00_00_99_f8_54};
-                        16'h20: {txc, txd} <= {8'h00, 64'h16_00_0a_69_15_00_0a_9d};
-                        16'h28: {txc, txd} <= {8'h00, 64'h00_07_b8_45_d5_00_08_64};
-                        16'h30: {txc, txd} <= {8'h00, 64'hab_05_00_06_84_ac_4f_07};
-                        16'h38: {txc, txd} <= {8'h00, 64'h0e_0d_0c_0b_0a_09_08_f0};
-                        16'h40: {txc, txd} <= {8'h00, 64'h16_15_14_13_12_11_10_0f};
-                        16'h48: {txc, txd} <= {8'h00, 64'h1e_1d_1c_1b_1a_19_18_17};
-                        16'h50: {txc, txd} <= {8'h00, 64'h26_25_24_23_22_21_20_1f};
-                        16'h58: {txc, txd} <= {8'h00, 64'h2e_2d_2c_2b_2a_29_28_27};
-                        16'h60: {txc, txd} <= {8'h00, 64'h36_35_34_33_32_31_30_2f};
-                        16'h68: {txc, txd} <= {8'he0, 64'h07_07_fd_ba_fc_4f_47_37};
-//                      16'h68: {txc, txd} <= {8'hfe, 64'h07_07_fd_ba_fc_4f_47_37};
+                        16'h10: {txc, txd} <= {8'h00, 32'h00_45_00_08, tx0_src_mac[47:16]};
+                        16'h18: {txc, txd} <= {8'h00, 8'h11, ipv4_ttl[7:0], 16'h00, ipv4_id[7:0], ipv4_id[15:8], tx0_ip_len[7:0], 4'h0, tx0_ip_len[11:8]};
+                        16'h20: {txc, txd} <= {8'h00, ipv4_dstip[23:16], ipv4_dstip[31:24], tx0_ipv4_srcip[7:0], tx0_ipv4_srcip[15:8], tx0_ipv4_srcip[23:16], tx0_ipv4_srcip[31:24], ip_sum[7:0], ip_sum[15:8]};
+                        16'h28: {txc, txd} <= {8'h00, tx0_udp_len[7:0], 4'h0, tx0_udp_len[11:8], 32'h5e_0d_5e_0d, ipv4_dstip[7:0], ipv4_dstip[15:8]};
+                        16'h30: begin
+				{txc, txd} <= {8'h00, global_counter[31:24], magic_code[7:0], magic_code[15:8], magic_code[23:16], magic_code[31:24], magic_code[39:32], 16'h00_00};
+				tmp_counter[23:0] <= global_counter[23:0];
+			end
+                        16'h38: {txc, txd} <= {8'h00, 40'h00_00_00_00_00, tmp_counter[7:0], tmp_counter[15:8], tmp_counter[23:16]};
+                        16'h40: {txc, txd} <= {8'hf0, 32'h07_07_07_fd, crc_out2[31:0]};
                         default: begin
                                 {txc, txd} <= {8'hff, 64'h07_07_07_07_07_07_07_07};
                         end
