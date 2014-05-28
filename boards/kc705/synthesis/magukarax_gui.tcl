@@ -27,6 +27,7 @@ read_verilog "../rtl/network_path/network_path.v"
 read_verilog "../rtl/network_path/ten_gig_eth_pcs_pma_ip_GT_Common_wrapper.v"
 read_verilog "../rtl/top.v"
 read_verilog "../rtl/measure.v"
+read_verilog "../../../cores/crc32/rtl/CRC32_D64.v"
 
 # NGC files
 #read_edif "../ip_cores/dma/netlist/eval/dma_back_end_axi.ngc"
