@@ -182,12 +182,12 @@ always @(posedge sys_clk) begin
                         16'h00: begin
 				{txc, txd} <= {8'h01, 64'hd5_55_55_55_55_55_55_fb};
 				ip_sum <= 16'h4500 + {4'h0,tx0_ip_len[11:0]} + ipv4_id[15:0] + {ipv4_ttl[7:0],8'h11} + tx0_ipv4_srcip[31:16] + tx0_ipv4_srcip[15:0] + ipv4_dstip[31:16] + ipv4_dstip[15:0];
-        if (tx0_enable == 1'b1)
-
 				crc_init <= 1'b1;
 			end
                         16'h08: begin
 				{txc, txd} <= {8'h00, tx0_src_mac[15:00], tx0_dst_mac[47: 0]};
+				ip_sum <= ~(ip_sum[15:0] + ip_sum[23:16]);
+
 				crc_init <= 1'b0;
 			end
                         16'h10: {txc, txd} <= {8'h00, 32'h00_45_00_08, tx0_src_mac[47:16]};
