@@ -159,6 +159,7 @@ wire [15:0] tx0_udp_len = tx0_frame_len - 16'h26;  // UDP Length
 wire [15:0] tx0_ip_len  = tx0_frame_len - 16'd18;  // IP Length (Frame Len - FCS Len - EtherFrame Len
 
 reg [23:0] tmp_counter;
+reg [31:0] crc_out3;
 
 always @(posedge sys_clk) begin
         if ( sys_rst ) begin
@@ -170,6 +171,7 @@ always @(posedge sys_clk) begin
   		tx0_dst_mac <= 48'hffffffffffff;
         end else begin
                 tx_counter <= tx_counter + 32'h8;
+		crc_out3 <= crc_out2;
                 case (tx_counter[15:0] )
                         16'h00: begin
 				{txc, txd} <= {8'h01, 64'hd5_55_55_55_55_55_55_fb};
@@ -191,7 +193,7 @@ always @(posedge sys_clk) begin
 				tmp_counter[23:0] <= global_counter[23:0];
 			end
                         16'h38: {txc, txd} <= {8'h00, 40'h00_00_00_00_00, tmp_counter[7:0], tmp_counter[15:8], tmp_counter[23:16]};
-                        16'h40: {txc, txd} <= {8'hf0, 32'h07_07_07_fd, crc_out2[31:0]};
+                        16'h40: {txc, txd} <= {8'hf0, 32'h07_07_07_fd, crc_out3[31:0]};
                         default: begin
                                 {txc, txd} <= {8'hff, 64'h07_07_07_07_07_07_07_07};
                         end
