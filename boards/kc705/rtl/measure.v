@@ -199,7 +199,8 @@ always @(posedge sys_clk) begin
 				tmp_counter[23:0] <= global_counter[23:0];
 			end
                         16'h38: {txc, txd} <= {8'h00, 40'h00_00_00_00_00, tmp_counter[7:0], tmp_counter[15:8], tmp_counter[23:16]};
-                        16'h40: begin
+                        16'h40: {txc, txd} <= {8'h00, 64'h00_00_00_00_00_00_00_00};
+                        16'h48: begin
 				{txc, txd} <= {8'hf0, 32'h07_07_07_fd, crc_out2[7:0], crc_out2[15:8], crc_out2[23:16], crc_out2[31:24]};
 				crc_rewrite <= 1'b1;
 			end
