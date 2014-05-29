@@ -184,12 +184,12 @@ always @(posedge sys_clk) begin
 				crc_init <= 1'b1;
 			end
                         16'h08: begin
-				{txc, txd} <= {8'h00, tx0_src_mac[15:00], tx0_dst_mac[47: 0]};
+				{txc, txd} <= {8'h00, tx0_src_mac[39:32], tx0_src_mac[47:40], tx0_dst_mac[7:0], tx0_dst_mac[15:8], tx0_dst_mac[23:16], tx0_dst_mac[31:24], tx0_dst_mac[39:32], tx0_dst_mac[47:40]};
 				ip_sum <= ~(ip_sum[15:0] + ip_sum[23:16]);
 
 				crc_init <= 1'b0;
 			end
-                        16'h10: {txc, txd} <= {8'h00, 32'h00_45_00_08, tx0_src_mac[47:16]};
+                        16'h10: {txc, txd} <= {8'h00, 32'h00_45_00_08, tx0_src_mac[7:0], tx0_src_mac[15:8], tx0_src_mac[23:16], tx0_src_mac[31:24]};
                         16'h18: {txc, txd} <= {8'h00, 8'h11, ipv4_ttl[7:0], 16'h00, ipv4_id[7:0], ipv4_id[15:8], tx0_ip_len[7:0], 4'h0, tx0_ip_len[11:8]};
                         16'h20: {txc, txd} <= {8'h00, ipv4_dstip[23:16], ipv4_dstip[31:24], tx0_ipv4_srcip[7:0], tx0_ipv4_srcip[15:8], tx0_ipv4_srcip[23:16], tx0_ipv4_srcip[31:24], ip_sum[7:0], ip_sum[15:8]};
                         16'h28: {txc, txd} <= {8'h00, tx0_udp_len[7:0], 4'h0, tx0_udp_len[11:8], 32'h5e_0d_5e_0d, ipv4_dstip[7:0], ipv4_dstip[15:8]};
