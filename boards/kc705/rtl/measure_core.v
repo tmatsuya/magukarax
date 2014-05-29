@@ -13,9 +13,9 @@ module measure_core # ( parameter
 
 	// XGMII interfaces for 4 MACs
 	output [63:0] xgmii_txd,
-	output xgmii_txc,
+	output [7:0] xgmii_txc,
 	input [63:0] xgmii_rxd,
-	input xgmii_rxc,
+	input [7:0] xgmii_rxc,
 
 	// PCI user registers
 	output reg [31:0] rx_pps,
@@ -112,42 +112,54 @@ always @(posedge sys_clk) begin
 			case (rx_count)
 			16'h00: if (sec_oneshot == 1'b0)
 				pps <= pps + 32'h1;
-			16'h08: {rx_src_mac[47:40] <= xgmii_rxd;// Ethernet hdr: Source MAC
-			16'h07: rx_src_mac[39:32] <= xgmii_rxd;
-			16'h08: rx_src_mac[31:24] <= xgmii_rxd;
-			16'h09: rx_src_mac[23:16] <= xgmii_rxd;
-			16'h0a: rx_src_mac[15: 8] <= xgmii_rxd;
-			16'h0b: rx_src_mac[ 7: 0] <= xgmii_rxd;
-			16'h0c: rx_type[15:8] <= xgmii_rxd;    // Type: IP=0800,ARP=0806
-			16'h0d: rx_type[ 7:0] <= xgmii_rxd;
-			16'h14: rx_opcode[15:8] <= xgmii_rxd;  // ARP: Operation (ARP reply: 0x0002)
-			16'h15: rx_opcode[ 7:0] <= xgmii_rxd;  // Opcode ARP Request=1
-			16'h1c: rx_ipv4_srcip[31:24] <= xgmii_rxd;  // ARP: Source IP address
-			16'h1d: rx_ipv4_srcip[23:16] <= xgmii_rxd;
-			16'h1e: begin
-				rx_ipv4_srcip[15: 8] <= xgmii_rxd;
-				rx_ipv4_ip1[31:24]   <= xgmii_rxd;
+			16'h08: begin
+				rx_src_mac[47:40] <= xgmii_rxd[55:48];// Ethernet hdr: Source MAC
+				rx_src_mac[39:32] <= xgmii_rxd[63:56];
 			end
-			16'h1f: begin
-				rx_ipv4_srcip[ 7: 0] <= xgmii_rxd;
-				rx_ipv4_ip1[23:16] <= xgmii_rxd;
+			16'h10: begin
+				rx_src_mac[31:24] <= xgmii_rxd[7:0];
+				rx_src_mac[23:16] <= xgmii_rxd[15:8];
+				rx_src_mac[15:8] <= xgmii_rxd[23:16];
+				rx_src_mac[7:0] <= xgmii_rxd[31:24];
+				rx_type[15:8] <= xgmii_rxd[39:32];
+				rx_type[7:0] <= xgmii_rxd[47:40];
 			end
-			16'h20: rx_ipv4_ip1[15: 8] <= xgmii_rxd;
-			16'h21: rx_ipv4_ip1[ 7: 0] <= xgmii_rxd;
-			16'h26: rx_arp_dst[31:24]  <= xgmii_rxd; // target IP for ARP
-			16'h27: rx_arp_dst[23:16]  <= xgmii_rxd;
-			16'h28: rx_arp_dst[15: 8]  <= xgmii_rxd;
-			16'h29: rx_arp_dst[ 7: 0]  <= xgmii_rxd;
-			16'h2a: rx_magic[39:32] <= xgmii_rxd;
-			16'h2b: rx_magic[31:24] <= xgmii_rxd;
-			16'h2c: rx_magic[23:16] <= xgmii_rxd;
-			16'h2d: rx_magic[15:8]  <= xgmii_rxd;
-			16'h2e: rx_magic[7:0]   <= xgmii_rxd;
-			16'h2f: counter_start[31:24] <= xgmii_rxd;
-			16'h30: counter_start[23:16] <= xgmii_rxd;
-			16'h31: counter_start[15:8]  <= xgmii_rxd;
-			16'h32: counter_start[7:0]   <= xgmii_rxd;
-			16'h33: begin
+			16'h18: begin
+				rx_opcode[15:8] <= xgmii_rxd[39:32];  // ARP: Operation (ARP reply: 0x0002)
+				rx_opcode[7:0] <= xgmii_rxd[47:40];  // ARP: Operation (ARP reply: 0x0002)
+			end
+			16'h20: begin
+				rx_ipv4_srcip[31:24] <= xgmii_rxd[39:32];  // ARP: Source IP address
+				rx_ipv4_srcip[23:16] <= xgmii_rxd[47:40];
+				rx_ipv4_srcip[15: 8] <= xgmii_rxd[55:48];
+				rx_ipv4_ip1[31:24]   <= xgmii_rxd[55:48];
+				rx_ipv4_srcip[ 7: 0] <= xgmii_rxd[63:56];
+				rx_ipv4_ip1[23:16] <= xgmii_rxd[63:56];
+			end
+
+			16'h28: begin
+				rx_ipv4_ip1[15: 8] <= xgmii_rxd[7:0];
+				rx_ipv4_ip1[ 7: 0] <= xgmii_rxd[15:8];
+				rx_arp_dst[31:24]  <= xgmii_rxd[55:48]; // target IP for ARP
+				rx_arp_dst[23:16]  <= xgmii_rxd[63:56];
+			end
+
+			16'h30: begin
+				rx_arp_dst[15: 8]  <= xgmii_rxd[7:0];
+				rx_arp_dst[ 7: 0]  <= xgmii_rxd[15:8];
+				rx_magic[39:32] <= xgmii_rxd[23:16];
+				rx_magic[31:24] <= xgmii_rxd[31:24];
+				rx_magic[23:16] <= xgmii_rxd[39:32];
+				rx_magic[15:8]  <= xgmii_rxd[47:40];
+				rx_magic[7:0]   <= xgmii_rxd[55:48];
+				counter_start[31:24] <= xgmii_rxd[63:56];
+			end
+
+			16'h38: begin
+				counter_start[23:16] <= xgmii_rxd[7:0];
+				counter_start[15:8]  <= xgmii_rxd[15:8];
+				counter_start[7:0]   <= xgmii_rxd[23:16];
+				v6type <= xgmii_rxd[55:48];
 				if (rx_magic[39:0] == `MAGIC_CODE) begin
 					rx_latency1 <= global_counter - counter_start;
 					if (count_2976 != 12'd2976) begin
@@ -159,23 +171,27 @@ always @(posedge sys_clk) begin
 					arp_request <= 1'b1;
 				end
 			end
-			16'h36: v6type            <= xgmii_rxd;
-			16'h3e: rx_magic[39:32] <= xgmii_rxd;
-			16'h3f: rx_magic[31:24] <= xgmii_rxd;
-			16'h40: rx_magic[23:16] <= xgmii_rxd;
-			16'h41: rx_magic[15:8]  <= xgmii_rxd;
-			16'h42: rx_magic[7:0]   <= xgmii_rxd;
-			16'h43: counter_start[31:24] <= xgmii_rxd;
-			16'h44: counter_start[23:16] <= xgmii_rxd;
-			16'h45: counter_start[15:8]  <= xgmii_rxd;
-			16'h46: counter_start[7:0]   <= xgmii_rxd;
-			16'h47: begin
+
+			16'h40: begin
+				rx_magic[39:32] <= xgmii_rxd[55:48];
+				rx_magic[31:24] <= xgmii_rxd[63:56];
+			end
+
+			16'h48: begin
+				rx_magic[23:16] <= xgmii_rxd[7:0];
+				rx_magic[15:8]  <= xgmii_rxd[15:8];
+				rx_magic[7:0]   <= xgmii_rxd[23:16];
+				counter_start[31:24] <= xgmii_rxd[31:24];
+				counter_start[23:16] <= xgmii_rxd[39:32];
+				counter_start[15:8]  <= xgmii_rxd[47:40];
+				counter_start[7:0]   <= xgmii_rxd[55:48];
 				if (rx_magic[39:0] == `MAGIC_CODE) begin
 					rx_latency1 <= global_counter - counter_start;
 				end
 			end
+
 			// frame type=IPv6(0x86dd) && Next Header=ICMPv6(0x3a) && Type=Router Advertisement(134)
-			16'h48:  if (rx_type == 16'h86dd && rx_opcode[15:8] == 8'h3a && v6type == 8'h86) begin
+			16'h50:  if (rx_type == 16'h86dd && rx_opcode[15:8] == 8'h3a && v6type == 8'h86) begin
 					tx_dst_mac <= rx_src_mac;
 					neighbor_replay <= 1'b1;
 				end
@@ -191,6 +207,7 @@ always @(posedge sys_clk) begin
 	end
 end
 
+`ifdef NO
 //-----------------------------------
 // ARP/ICMPv6 CRC
 //-----------------------------------
@@ -326,7 +343,7 @@ always @(posedge sys_clk) begin
 			7'h44: begin         // FCS (CRC)
 				arp_crc_rd  <= 1'b1;
 				txd <= arp_crc_out[31:24];
-	 		nd
+	 		end
 			7'h45: txd <= arp_crc_out[23:16];
 			7'h46: txd <= arp_crc_out[15:8];
 			7'h47: txd <= arp_crc_out[7:0];
@@ -438,5 +455,6 @@ end
 
 assign xgmii_txd = txd;
 assign xgmii_txc = txc;
+`endif
 
 endmodule

@@ -1,7 +1,7 @@
 SOURCES=$(wildcard *.v) \
 	$(wildcard ../../../cores/crc32/rtl/*.v) \
+	$(wildcard ../rtl/measure_core.v) \
 	$(wildcard ../rtl/measure.v)
-#	$(wildcard ../rtl/measure_core.v) \
 
 #all: cversim
 all: tlp_data.hex phy_data.hex isim

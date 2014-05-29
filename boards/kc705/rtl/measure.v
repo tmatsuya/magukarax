@@ -62,7 +62,9 @@ module measure (
 	output [23:0] rx3_latency,
 	output [31:0] rx3_ipv4_ip,
 
-	output reg [31:0] global_counter
+	output reg [31:0] global_counter,
+	output [31:0] count_2976_latency
+
 );
 
 //-----------------------------------
@@ -216,7 +218,6 @@ assign xgmii_0_txc = txc2;
 //-----------------------------------
 // RX#1 Recive port logic
 //-----------------------------------
-`ifdef NO
 measure_core # (
 	.Int_ipv4_addr({8'd10, 8'd0, 8'd21, 8'd105}),
 	.Int_ipv6_addr(128'h3776_0000_0000_0021_0000_0000_0000_0105),
@@ -241,6 +242,5 @@ measure_core # (
 
 	.count_2976_latency(count_2976_latency)
 );
-`endif
 
 endmodule
