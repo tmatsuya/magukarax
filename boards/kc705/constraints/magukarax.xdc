@@ -24,6 +24,20 @@ set_property PACKAGE_PIN D6 [get_ports xphy1_rxp]
 set_property PACKAGE_PIN C3 [get_ports xphy1_txn]
 set_property PACKAGE_PIN C4 [get_ports xphy1_txp]
 
+###---------- Set placement for gt2_gtx_wrapper_i/GTX_DUAL ------
+set_property LOC GTXE2_CHANNEL_X0Y14 [get_cells network_path_inst_2/ten_gig_eth_pcs_pma_inst/inst/gt0_gtwizard_10gbaser_multi_gt_i/gt0_gtwizard_10gbaser_i/gtxe2_i]
+set_property PACKAGE_PIN B5 [get_ports xphy2_rxn]
+set_property PACKAGE_PIN B6 [get_ports xphy2_rxp]
+set_property PACKAGE_PIN B1 [get_ports xphy2_txn]
+set_property PACKAGE_PIN B2 [get_ports xphy2_txp]
+
+###---------- Set placement for gt3_gtx_wrapper_i/GTX_DUAL ------
+set_property LOC GTXE2_CHANNEL_X0Y15 [get_cells network_path_inst_3/ten_gig_eth_pcs_pma_inst/inst/gt0_gtwizard_10gbaser_multi_gt_i/gt0_gtwizard_10gbaser_i/gtxe2_i]
+set_property PACKAGE_PIN A7 [get_ports xphy3_rxn]
+set_property PACKAGE_PIN A8 [get_ports xphy3_rxp]
+set_property PACKAGE_PIN A3 [get_ports xphy3_txn]
+set_property PACKAGE_PIN A4 [get_ports xphy3_txp]
+
 ### Uncomment the following lines for different quad instance
 ###---------- Set placement for gt0_gtx_wrapper_i/GTX_DUAL ------
 #set_property LOC GTXE2_CHANNEL_X0Y10 [get_cells network_path_inst_0/ten_gig_eth_pcs_pma_inst/inst/*/gtxe2_i]

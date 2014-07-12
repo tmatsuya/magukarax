@@ -1,4 +1,5 @@
 `timescale 1ps / 1ps
+`include "../rtl/setup.v"
 
 module top (
 	input xphy0_refclk_p, 
@@ -12,6 +13,16 @@ module top (
 	output xphy1_txn, 
 	input xphy1_rxp, 
 	input xphy1_rxn,
+`ifdef ENABE_XGMII23
+	output xphy2_txp, 
+	output xphy2_txn, 
+	input xphy2_rxp, 
+	input xphy2_rxn,
+	output xphy3_txp, 
+	output xphy3_txn, 
+	input xphy3_rxp, 
+	input xphy3_rxn,
+`endif
 
 	input clk_ref_p,
 	input clk_ref_n,
@@ -43,19 +54,16 @@ assign sys_rst = button_c; // 1'b0;
 
 wire		clk156;
 
-wire [63:0]	xgmii0_txd, xgmii1_txd;
-wire [7:0]	xgmii0_txc, xgmii1_txc;
-wire [63:0]	xgmii0_rxd, xgmii1_rxd;
-wire [7:0]	xgmii0_rxc, xgmii1_rxc;
+wire [63:0]	xgmii0_txd, xgmii1_txd, xgmii2_txd, xgmii3_txd;
+wire [7:0]	xgmii0_txc, xgmii1_txc, xgmii2_txc, xgmii3_txc;
+wire [63:0]	xgmii0_rxd, xgmii1_rxd, xgmii2_rxd, xgmii3_rxd;
+wire [7:0]	xgmii0_rxc, xgmii1_rxc, xgmii2_rxc, xgmii3_rxc;
   
-wire [7:0]	xphy0_status;
-wire [7:0]	xphy1_status;
-wire		xphy0_tx_fault;
-wire		xphy1_tx_fault;
+wire [7:0]	xphy0_status, xphy1_status, xphy2_status, xphy3_status;
+wire		xphy0_tx_fault, xphy1_tx_fault, xphy2_tx_fault, xphy3_tx_fault;
   
 
-wire		nw0_reset;  
-wire		nw1_reset;  
+wire		nw0_reset, nw1_reset, nw2_reset, nw3_reset;
 wire		txusrclk;
 wire		txusrclk2;
 wire		txclk322;
@@ -70,14 +78,12 @@ wire		qplllock;
 wire		qplloutclk;
 wire		qplloutrefclk;
 wire		qplloutclk1;
-wire		qplloutrefclk1;
 wire		qplloutclk2;
+wire		qplloutrefclk1;
 wire		qplloutrefclk2;
 wire		reset_counter_done; 
-wire		nw0_reset_i;
-wire		nw1_reset_i;
-wire		xphy0_tx_resetdone;
-wire		xphy1_tx_resetdone;
+wire		nw0_reset_i, nw1_reset_i, nw2_reset_i, nw3_reset_i;
+wire		xphy0_tx_resetdone, xphy1_tx_resetdone, xphy2_tx_resetdone, xphy3_tx_resetdone;
 
 
   
@@ -86,9 +92,15 @@ wire [4:0]	xphy0_prtad;
 wire		xphy0_signal_detect;
 wire [4:0]	xphy1_prtad;
 wire		xphy1_signal_detect;
+wire [4:0]	xphy2_prtad;
+wire		xphy2_signal_detect;
+wire [4:0]	xphy3_prtad;
+wire		xphy3_signal_detect;
   
 
 wire		xphyrefclk_i;    
+wire		dclk_i;                     
+
 wire		gt0_pma_resetout_i;
 wire		gt0_pcs_resetout_i;         
 wire		gt0_drpen_i;                
@@ -108,17 +120,15 @@ wire		gt0_rx_prbs31_en_i;
 wire [2:0]	gt0_loopback_i;             
 wire		gt0_txclk322_i;             
 wire		gt0_rxclk322_i;             
+
+wire		gt1_pma_resetout_i;
+wire		gt1_pcs_resetout_i;         
 wire		gt1_drpen_i;                
 wire		gt1_drpwe_i;                
 wire [15:0]	gt1_drpaddr_i;              
 wire [15:0]	gt1_drpdi_i;                
 wire [15:0]	gt1_drpdo_i;                
 wire		gt1_drprdy_i;               
-wire		gt1_txclk322_i;             
-wire		gt1_rxclk322_i;             
-wire		dclk_i;                     
-wire		gt1_pma_resetout_i;
-wire		gt1_pcs_resetout_i;         
 wire		gt1_resetdone_i;            
 wire [31:0]	gt1_txd_i;                  
 wire [7:0]	gt1_txc_i;                  
@@ -127,8 +137,9 @@ wire [7:0]	gt1_rxc_i;
 wire		gt1_rxgearboxslip_i;        
 wire		gt1_tx_prbs31_en_i;         
 wire		gt1_rx_prbs31_en_i;         
-  
 wire [2:0]	gt1_loopback_i;             
+wire		gt1_txclk322_i;             
+wire		gt1_rxclk322_i;             
 
   
 // ---------------
@@ -137,6 +148,8 @@ wire [2:0]	gt1_loopback_i;
 
 assign xphy0_tx_fault = 1'b0;
 assign xphy1_tx_fault = 1'b0;
+assign xphy2_tx_fault = 1'b0;
+assign xphy3_tx_fault = 1'b0;
 
 wire		gt0_pma_resetout;
 wire		gt0_pcs_resetout;
@@ -172,9 +185,13 @@ wire [7:0]	gt1_rxc;
 wire		gt1_rxgearboxslip;
 wire [2:0]	gt1_loopback;
 
+// ---------------
+// GT0 instance
+// ---------------
  
 assign xphy0_prtad = 5'd0;
 assign xphy0_signal_detect = 1'b1;
+assign nw0_reset = nw0_reset_i;
 
 network_path network_path_inst_0 (
 	//XGEMAC PHY IO
@@ -218,10 +235,12 @@ network_path network_path_inst_0 (
 	.xgmii_rxc(xgmii0_rxc)
 ); 
 
+// ---------------
+// GT1 instance
+// ---------------
+
 assign xphy1_prtad  = 5'd1;
 assign xphy1_signal_detect = 1'b1;
- 
-assign nw0_reset = nw0_reset_i;
 assign nw1_reset = nw1_reset_i;
  
 network_path network_path_inst_1 (
@@ -340,6 +359,18 @@ measure measure_inst (
 	.xgmii_1_txc(xgmii1_txc),
 	.xgmii_1_rxd(xgmii1_rxd),
 	.xgmii_1_rxc(xgmii1_rxc),
+
+`ifdef ENABE_XGMII23
+	.xgmii_2_txd(xgmii2_txd),
+	.xgmii_2_txc(xgmii2_txc),
+	.xgmii_2_rxd(xgmii2_rxd),
+	.xgmii_2_rxc(xgmii2_rxc),
+
+	.xgmii_3_txd(xgmii3_txd),
+	.xgmii_3_txc(xgmii3_txc),
+	.xgmii_3_rxd(xgmii3_rxd),
+	.xgmii_3_rxc(xgmii3_rxc),
+`endif
 
 	.tx0_enable(1'b1),
 	.tx0_ipv6(1'b0),
