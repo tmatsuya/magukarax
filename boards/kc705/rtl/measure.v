@@ -243,4 +243,7 @@ measure_core # (
 	.count_2976_latency(count_2976_latency)
 );
 
+assign xgmii_1_txd = 64'h07_07_07_07_07_07_07_07;
+assign xgmii_1_txc = 8'hff;
+
 endmodule
