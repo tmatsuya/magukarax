@@ -5,6 +5,7 @@ module top (
 	input xphy0_refclk_p, 
 	input xphy0_refclk_n, 
 	output [4:0] sfp_tx_disable, 
+	output [3:0] sfp_tx_fault, 
 	output xphy0_txp, 
 	output xphy0_txn, 
 	input xphy0_rxp, 
@@ -141,6 +142,46 @@ wire [2:0]	gt1_loopback_i;
 wire		gt1_txclk322_i;             
 wire		gt1_rxclk322_i;             
 
+wire		gt2_pma_resetout_i;
+wire		gt2_pcs_resetout_i;         
+wire		gt2_drpen_i;                
+wire		gt2_drpwe_i;                
+wire [15:0]	gt2_drpaddr_i;              
+wire [15:0]	gt2_drpdi_i;                
+wire [15:0]	gt2_drpdo_i;                
+wire		gt2_drprdy_i;               
+wire		gt2_resetdone_i;            
+wire [31:0]	gt2_txd_i;                  
+wire [7:0]	gt2_txc_i;                  
+wire [31:0]	gt2_rxd_i;                  
+wire [7:0]	gt2_rxc_i;                  
+wire		gt2_rxgearboxslip_i;        
+wire		gt2_tx_prbs31_en_i;         
+wire		gt2_rx_prbs31_en_i;         
+wire [2:0]	gt2_loopback_i;             
+wire		gt2_txclk322_i;             
+wire		gt2_rxclk322_i;             
+
+wire		gt3_pma_resetout_i;
+wire		gt3_pcs_resetout_i;         
+wire		gt3_drpen_i;                
+wire		gt3_drpwe_i;                
+wire [15:0]	gt3_drpaddr_i;              
+wire [15:0]	gt3_drpdi_i;                
+wire [15:0]	gt3_drpdo_i;                
+wire		gt3_drprdy_i;               
+wire		gt3_resetdone_i;            
+wire [31:0]	gt3_txd_i;                  
+wire [7:0]	gt3_txc_i;                  
+wire [31:0]	gt3_rxd_i;                  
+wire [7:0]	gt3_rxc_i;                  
+wire		gt3_rxgearboxslip_i;        
+wire		gt3_tx_prbs31_en_i;         
+wire		gt3_rx_prbs31_en_i;         
+wire [2:0]	gt3_loopback_i;             
+wire		gt3_txclk322_i;             
+wire		gt3_rxclk322_i;             
+
   
 // ---------------
 // Clock and Reset
@@ -165,9 +206,9 @@ wire [7:0]	gt0_txc;
 wire [63:0]	gt0_rxd;
 wire [7:0]	gt0_rxc;
 wire		gt0_rxgearboxslip;
+wire [2:0]	gt0_loopback;
 wire		gt0_tx_prbs31_en;
 wire		gt0_rx_prbs31_en;
-wire [2:0]	gt0_loopback;
 
 wire		gt1_pma_resetout;
 wire		gt1_pcs_resetout;
@@ -184,6 +225,38 @@ wire [63:0]	gt1_rxd;
 wire [7:0]	gt1_rxc;
 wire		gt1_rxgearboxslip;
 wire [2:0]	gt1_loopback;
+
+wire		gt2_pma_resetout;
+wire		gt2_pcs_resetout;
+wire		gt2_drpen;
+wire		gt2_drpwe;
+wire [15:0]	gt2_drpaddr;
+wire [15:0]	gt2_drpdi;
+wire [15:0]	gt2_drpdo;
+wire		gt2_drprdy;
+wire		gt2_resetdone;
+wire [63:0]	gt2_txd;
+wire [7:0]	gt2_txc;
+wire [63:0]	gt2_rxd;
+wire [7:0]	gt2_rxc;
+wire		gt2_rxgearboxslip;
+wire [2:0]	gt2_loopback;
+
+wire		gt3_pma_resetout;
+wire		gt3_pcs_resetout;
+wire		gt3_drpen;
+wire		gt3_drpwe;
+wire [15:0]	gt3_drpaddr;
+wire [15:0]	gt3_drpdi;
+wire [15:0]	gt3_drpdo;
+wire		gt3_drprdy;
+wire		gt3_resetdone;
+wire [63:0]	gt3_txd;
+wire [7:0]	gt3_txc;
+wire [63:0]	gt3_rxd;
+wire [7:0]	gt3_rxc;
+wire		gt3_rxgearboxslip;
+wire [2:0]	gt3_loopback;
 
 // ---------------
 // GT0 instance
@@ -284,6 +357,108 @@ network_path network_path_inst_1 (
 	.xgmii_rxd(xgmii1_rxd),
 	.xgmii_rxc(xgmii1_rxc)
 ); 
+
+`ifdef ENABE_XGMII23
+// ---------------
+// GT2 instance
+// ---------------
+
+assign xphy2_prtad  = 5'd2;
+assign xphy2_signal_detect = 1'b1;
+assign nw2_reset = nw2_reset_i;
+ 
+network_path network_path_inst_2 (
+	//XGEMAC PHY IO
+	.txusrclk(txusrclk),
+	.txusrclk2(txusrclk2),
+	.txclk322(),
+	.areset_refclk_bufh(areset_refclk_bufh),
+	.areset_clk156(areset_clk156),
+	.mmcm_locked_clk156(mmcm_locked_clk156),
+	.gttxreset_txusrclk2(gttxreset_txusrclk2),
+	.gttxreset(gttxreset),
+	.gtrxreset(gtrxreset),
+	.txuserrdy(txuserrdy),
+	.qplllock(qplllock),
+`ifdef USE_DIFF_QUAD
+	.qplloutclk(qplloutclk2),
+	.qplloutrefclk(qplloutrefclk2),
+`else
+	.qplloutclk(qplloutclk),
+	.qplloutrefclk(qplloutrefclk),
+`endif
+	.reset_counter_done(reset_counter_done), 
+	.txp(xphy2_txp),
+	.txn(xphy2_txn),
+	.rxp(xphy2_rxp),
+	.rxn(xphy2_rxn),
+	.tx_resetdone(xphy2_tx_resetdone),
+    
+	.signal_detect(xphy2_signal_detect),
+	.tx_fault(xphy2_tx_fault),
+	.prtad(xphy2_prtad),
+	.xphy_status(xphy2_status),
+	.clk156(clk156),
+	.soft_reset(~axi_str_c2s1_aresetn),
+	.sys_rst((sys_rst & ~mmcm_locked_clk156)),
+	.nw_rst_out(nw2_reset_i),   
+	.dclk(dclk_i), 
+	.xgmii_txd(xgmii2_txd),
+	.xgmii_txc(xgmii2_txc),
+	.xgmii_rxd(xgmii2_rxd),
+	.xgmii_rxc(xgmii2_rxc)
+); 
+
+// ---------------
+// GT3 instance
+// ---------------
+
+assign xphy3_prtad  = 5'd3;
+assign xphy3_signal_detect = 1'b1;
+assign nw3_reset = nw3_reset_i;
+ 
+network_path network_path_inst_3 (
+	//XGEMAC PHY IO
+	.txusrclk(txusrclk),
+	.txusrclk2(txusrclk2),
+	.txclk322(),
+	.areset_refclk_bufh(areset_refclk_bufh),
+	.areset_clk156(areset_clk156),
+	.mmcm_locked_clk156(mmcm_locked_clk156),
+	.gttxreset_txusrclk2(gttxreset_txusrclk2),
+	.gttxreset(gttxreset),
+	.gtrxreset(gtrxreset),
+	.txuserrdy(txuserrdy),
+	.qplllock(qplllock),
+`ifdef USE_DIFF_QUAD
+	.qplloutclk(qplloutclk2),
+	.qplloutrefclk(qplloutrefclk2),
+`else
+	.qplloutclk(qplloutclk),
+	.qplloutrefclk(qplloutrefclk),
+`endif
+	.reset_counter_done(reset_counter_done), 
+	.txp(xphy3_txp),
+	.txn(xphy3_txn),
+	.rxp(xphy3_rxp),
+	.rxn(xphy3_rxn),
+	.tx_resetdone(xphy3_tx_resetdone),
+    
+	.signal_detect(xphy3_signal_detect),
+	.tx_fault(xphy3_tx_fault),
+	.prtad(xphy3_prtad),
+	.xphy_status(xphy3_status),
+	.clk156(clk156),
+	.soft_reset(~axi_str_c2s1_aresetn),
+	.sys_rst((sys_rst & ~mmcm_locked_clk156)),
+	.nw_rst_out(nw3_reset_i),   
+	.dclk(dclk_i), 
+	.xgmii_txd(xgmii3_txd),
+	.xgmii_txc(xgmii3_txc),
+	.xgmii_rxd(xgmii3_rxd),
+	.xgmii_rxc(xgmii3_rxc)
+); 
+`endif    //ENABE_XGMII23
 
 
 `ifdef USE_DIFF_QUAD
@@ -400,8 +575,8 @@ measure measure_inst (
 
 assign led[0] = xphy0_status[0]; 
 assign led[1] = xphy1_status[0]; 
-assign led[2] = 1'b0; 
-assign led[3] = 1'b0; 
+assign led[2] = xphy2_status[0]; 
+assign led[3] = xphy3_status[0]; 
 assign led[4] = 1'b0;
 assign led[5] = 1'b0;
 assign led[6] = 1'b0;

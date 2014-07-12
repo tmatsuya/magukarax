@@ -257,7 +257,7 @@ assign xgmii_2_txc = txc2;
 assign xgmii_3_txd = txd2;
 assign xgmii_3_txc = txc2;
 `else
-assign xgmii_1_txd = 64'h07_07_07_07_07_07_07_07;
+assign xgmii_2_txd = 64'h07_07_07_07_07_07_07_07;
 assign xgmii_2_txc = 8'hff;
 assign xgmii_3_txd = 64'h07_07_07_07_07_07_07_07;
 assign xgmii_3_txc = 8'hff;

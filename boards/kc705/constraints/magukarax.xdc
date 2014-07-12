@@ -49,20 +49,33 @@ set_property PACKAGE_PIN A4 [get_ports xphy3_txp]
 set_property DCI_CASCADE {32 34} [get_iobanks 33]
 
 ## SFP TX Disable loc (port0-3:0 is enable, port 4:1 is enable)
-set_property PACKAGE_PIN AB27 [get_ports {sfp_tx_disable[0]}]
+set_property PACKAGE_PIN F20 [get_ports {sfp_tx_disable[0]}]
 set_property IOSTANDARD LVCMOS25 [get_ports {sfp_tx_disable[0]}]
 
 set_property PACKAGE_PIN A26 [get_ports {sfp_tx_disable[1]}]
 set_property IOSTANDARD LVCMOS25 [get_ports {sfp_tx_disable[1]}]
 
-set_property PACKAGE_PIN G30 [get_ports {sfp_tx_disable[2]}]
+set_property PACKAGE_PIN D29 [get_ports {sfp_tx_disable[2]}]
 set_property IOSTANDARD LVCMOS25 [get_ports {sfp_tx_disable[2]}]
 
-set_property PACKAGE_PIN D29 [get_ports {sfp_tx_disable[3]}]
+set_property PACKAGE_PIN G30 [get_ports {sfp_tx_disable[3]}]
 set_property IOSTANDARD LVCMOS25 [get_ports {sfp_tx_disable[3]}]
 
 set_property PACKAGE_PIN Y20 [get_ports {sfp_tx_disable[4]}]
 set_property IOSTANDARD LVCMOS25 [get_ports {sfp_tx_disable[4]}]
+
+## SFP TX Fault loc
+set_property PACKAGE_PIN E20 [get_ports {sfp_tx_fault[0]}]
+set_property IOSTANDARD LVCMOS25 [get_ports {sfp_tx_fault[0]}]
+
+set_property PACKAGE_PIN B28 [get_ports {sfp_tx_fault[1]}]
+set_property IOSTANDARD LVCMOS25 [get_ports {sfp_tx_fault[1]}]
+
+set_property PACKAGE_PIN C30 [get_ports {sfp_tx_fault[2]}]
+set_property IOSTANDARD LVCMOS25 [get_ports {sfp_tx_fault[2]}]
+
+set_property PACKAGE_PIN E28 [get_ports {sfp_tx_fault[3]}]
+set_property IOSTANDARD LVCMOS25 [get_ports {sfp_tx_fault[3]}]
 
 ##-------------------------------------
 ## LED Status Pinout   (bottom to top)
