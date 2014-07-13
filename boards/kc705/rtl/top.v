@@ -61,7 +61,6 @@ wire [63:0]	xgmii0_rxd, xgmii1_rxd, xgmii2_rxd, xgmii3_rxd;
 wire [7:0]	xgmii0_rxc, xgmii1_rxc, xgmii2_rxc, xgmii3_rxc;
   
 wire [7:0]	xphy0_status, xphy1_status, xphy2_status, xphy3_status;
-wire		xphy0_tx_fault, xphy1_tx_fault, xphy2_tx_fault, xphy3_tx_fault;
   
 
 wire		nw0_reset, nw1_reset, nw2_reset, nw3_reset;
@@ -187,11 +186,6 @@ wire		gt3_rxclk322_i;
 // Clock and Reset
 // ---------------
 
-assign xphy0_tx_fault = 1'b0;
-assign xphy1_tx_fault = 1'b0;
-assign xphy2_tx_fault = 1'b0;
-assign xphy3_tx_fault = 1'b0;
-
 wire		gt0_pma_resetout;
 wire		gt0_pcs_resetout;
 wire		gt0_drpen;
@@ -294,7 +288,7 @@ network_path network_path_inst_0 (
 	.tx_resetdone(xphy0_tx_resetdone),
     
 	.signal_detect(xphy0_signal_detect),
-	.tx_fault(xphy0_tx_fault),
+	.tx_fault(sfp_tx_fault[0]),
 	.prtad(xphy0_prtad),
 	.xphy_status(xphy0_status),
 	.clk156(clk156),
@@ -344,7 +338,7 @@ network_path network_path_inst_1 (
 	.tx_resetdone(xphy1_tx_resetdone),
     
 	.signal_detect(xphy1_signal_detect),
-	.tx_fault(xphy1_tx_fault),
+	.tx_fault(sfp_tx_fault[1]),
 	.prtad(xphy1_prtad),
 	.xphy_status(xphy1_status),
 	.clk156(clk156),
@@ -395,7 +389,7 @@ network_path network_path_inst_2 (
 	.tx_resetdone(xphy2_tx_resetdone),
     
 	.signal_detect(xphy2_signal_detect),
-	.tx_fault(xphy2_tx_fault),
+	.tx_fault(sfp_tx_fault[2]),
 	.prtad(xphy2_prtad),
 	.xphy_status(xphy2_status),
 	.clk156(clk156),
@@ -445,7 +439,7 @@ network_path network_path_inst_3 (
 	.tx_resetdone(xphy3_tx_resetdone),
     
 	.signal_detect(xphy3_signal_detect),
-	.tx_fault(xphy3_tx_fault),
+	.tx_fault(sfp_tx_fault[3]),
 	.prtad(xphy3_prtad),
 	.xphy_status(xphy3_status),
 	.clk156(clk156),
