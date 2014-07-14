@@ -77,12 +77,10 @@ begin
 end
 endtask
 
-/*
-always @(posedge Wclk) begin
-	if (WriteEn_in == 1'b1)
-		$display("Data_in: %x", Data_in);
+always @(posedge sys_clk) begin
+	if (xgmii_0_txc != 8'hff)
+		$display("%x", xgmii_0_txd);
 end
-*/
 
 reg [23:0] tlp_rom [0:4095];
 reg [11:0] phy_rom [0:4095];
