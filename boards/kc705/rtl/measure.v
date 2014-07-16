@@ -100,8 +100,10 @@ reg [7:0] txc, txc2;
 reg crc_init = 1'b0;
 reg crc_rewrite = 1'b0;
 assign crc_data_en = ~crc_init;
-wire [31:0] crc_out, crc_out2;
-assign crc_out2 = ~{ crc_out[24],crc_out[25],crc_out[26],crc_out[27],crc_out[28],crc_out[29],crc_out[30],crc_out[31], crc_out[16],crc_out[17],crc_out[18],crc_out[19],crc_out[20],crc_out[21],crc_out[22],crc_out[23], crc_out[ 8],crc_out[ 9],crc_out[10],crc_out[11],crc_out[12],crc_out[13],crc_out[14],crc_out[15], crc_out[ 0],crc_out[ 1],crc_out[ 2],crc_out[ 3],crc_out[ 4],crc_out[ 5],crc_out[ 6],crc_out[ 7] };
+wire [31:0] crc64_out, crc64_outrev;
+wire [31:0] crc32_out, crc32_outrev;
+assign crc64_outrev = ~{ crc64_out[24],crc64_out[25],crc64_out[26],crc64_out[27],crc64_out[28],crc64_out[29],crc64_out[30],crc64_out[31], crc64_out[16],crc64_out[17],crc64_out[18],crc64_out[19],crc64_out[20],crc64_out[21],crc64_out[22],crc64_out[23], crc64_out[ 8],crc64_out[ 9],crc64_out[10],crc64_out[11],crc64_out[12],crc64_out[13],crc64_out[14],crc64_out[15], crc64_out[ 0],crc64_out[ 1],crc64_out[ 2],crc64_out[ 3],crc64_out[ 4],crc64_out[ 5],crc64_out[ 6],crc64_out[ 7] };
+assign crc32_outrev = ~{ crc32_out[24],crc32_out[25],crc32_out[26],crc32_out[27],crc32_out[28],crc32_out[29],crc32_out[30],crc32_out[31], crc32_out[16],crc32_out[17],crc32_out[18],crc32_out[19],crc32_out[20],crc32_out[21],crc32_out[22],crc32_out[23], crc32_out[ 8],crc32_out[ 9],crc32_out[10],crc32_out[11],crc32_out[12],crc32_out[13],crc32_out[14],crc32_out[15], crc32_out[ 0],crc32_out[ 1],crc32_out[ 2],crc32_out[ 3],crc32_out[ 4],crc32_out[ 5],crc32_out[ 6],crc32_out[ 7] };
 
 crc32_d64 crc32_d64_inst (
 	.rst(crc_init),
@@ -116,7 +118,18 @@ txd[40],txd[41],txd[42],txd[43],txd[44],txd[45],txd[46],txd[47],txd[48],txd[49],
 txd[50],txd[51],txd[52],txd[53],txd[54],txd[55],txd[56],txd[57],txd[58],txd[59],
 txd[60],txd[61],txd[62],txd[63]
 }),	// 64bit
-	.crc_out(crc_out)	// 32bit
+	.crc_out(crc64_out)	// 32bit
+);
+
+crc32_d32 crc32_d32_inst (
+	.data_in({
+txd[00],txd[01],txd[02],txd[03],txd[04],txd[05],txd[06],txd[07],txd[08],txd[09],
+txd[10],txd[11],txd[12],txd[13],txd[14],txd[15],txd[16],txd[17],txd[18],txd[19],
+txd[20],txd[21],txd[22],txd[23],txd[24],txd[25],txd[26],txd[27],txd[28],txd[29],
+txd[30],txd[31]
+}),
+	.crc_in(crc64_out),
+	.crc_out(crc32_out)
 );
 
 //-----------------------------------
@@ -177,7 +190,7 @@ always @(posedge sys_clk) begin
 		if (crc_rewrite == 1'b0)
 			txd2 <= txd;
 		else
-			txd2 <= {txd[63:32], crc_out2[7:0], crc_out2[15:8], crc_out2[23:16], crc_out2[31:24]};
+			txd2 <= {crc32_outrev[7:0], crc32_outrev[15:8], crc32_outrev[23:16], crc32_outrev[31:24], txd[31:0]};
 		tx_counter <= tx_counter + 32'h8;
 		case (tx_counter[15:0] )
 			16'h00: begin
@@ -199,10 +212,12 @@ always @(posedge sys_clk) begin
 				tmp_counter[23:0] <= global_counter[23:0];
 			end
 			16'h38: {txc, txd} <= {8'h00, 40'h00_00_00_00_00, tmp_counter[7:0], tmp_counter[15:8], tmp_counter[23:16]};
-			16'h40: {txc, txd} <= {8'h00, 64'h00_00_00_00_00_00_00_00};
-			16'h48: begin
-				{txc, txd} <= {8'hf0, 32'h07_07_07_fd, crc_out2[7:0], crc_out2[15:8], crc_out2[23:16], crc_out2[31:24]};
+			16'h40: begin
+				{txc, txd} <= {8'h00, 32'he5_e5_e5_e5, 32'h_00_00_00_00};
 				crc_rewrite <= 1'b1;
+			end
+			16'h48: begin
+				{txc, txd} <= {8'hff, 64'h07_07_07_07_07_07_07_fd};
 			end
 			default: begin
 				{txc, txd} <= {8'hff, 64'h07_07_07_07_07_07_07_07};

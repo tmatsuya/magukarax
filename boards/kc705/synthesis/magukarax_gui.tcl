@@ -29,6 +29,7 @@ read_verilog "../rtl/top.v"
 read_verilog "../rtl/measure.v"
 read_verilog "../rtl/measure_core.v"
 read_verilog "../../../cores/crc32/rtl/CRC32_D64.v"
+read_verilog "../../../cores/crc32/rtl/CRC32_D32.v"
 
 # NGC files
 #read_edif "../ip_cores/dma/netlist/eval/dma_back_end_axi.ngc"
