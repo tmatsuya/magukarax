@@ -1,3 +1,3 @@
-`define MAGIC_CODE      40'hcc00cc00cc
+`define MAGIC_CODE      32'hbe9be955
 
 `define ENABE_XGMII23

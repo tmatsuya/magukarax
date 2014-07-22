@@ -146,9 +146,12 @@ end
 //-----------------------------------
 // scenario parameter
 //-----------------------------------
-wire [39:0] magic_code       = `MAGIC_CODE;
+wire [31:0] magic_code     = `MAGIC_CODE;
+wire [31:0] tv_sec         = 32'd1406028803;	// time stamp
+wire [31:0] tv_usec;
+
 reg [16:0] ipv4_id	   = 16'h0;
-reg [7:0]  ipv4_ttl	  = 8'h40;      // IPv4: default TTL value (default: 64)
+reg [7:0]  ipv4_ttl	   = 8'h40;      // IPv4: default TTL value (default: 64)
 reg [31:0] pps;
 reg [31:0] throughput;
 reg [23:0] full_ipv4;
@@ -173,14 +176,14 @@ wire [31:0] ipv4_dstip = (tx0_fullroute == 1'b0) ? tx0_ipv4_dstip[31:0] : {full_
 wire [15:0] tx0_udp_len = tx0_frame_len - 16'h26;  // UDP Length
 wire [15:0] tx0_ip_len  = tx0_frame_len - 16'd18;  // IP Length (Frame Len - FCS Len - EtherFrame Len
 
-reg [23:0] tmp_counter;
+reg [15:0] tmp_counter;
 
 always @(posedge sys_clk) begin
 	if ( sys_rst ) begin
 		crc_init <= 1'b0;
 		crc_rewrite <= 1'b0;
 		tx_counter <= 32'h0;
-		tmp_counter <= 24'h0;
+		tmp_counter <= 16'h0;
 		txd <= 64'h0707070707070707;
 		txc <= 8'hff;
   		tx0_dst_mac <= 48'hffffffffffff;
@@ -206,14 +209,14 @@ always @(posedge sys_clk) begin
 			16'h10: {txc, txd} <= {8'h00, 32'h00_45_00_08, tx0_src_mac[7:0], tx0_src_mac[15:8], tx0_src_mac[23:16], tx0_src_mac[31:24]};
 			16'h18: {txc, txd} <= {8'h00, 8'h11, ipv4_ttl[7:0], 16'h00, ipv4_id[7:0], ipv4_id[15:8], tx0_ip_len[7:0], 4'h0, tx0_ip_len[11:8]};
 			16'h20: {txc, txd} <= {8'h00, ipv4_dstip[23:16], ipv4_dstip[31:24], tx0_ipv4_srcip[7:0], tx0_ipv4_srcip[15:8], tx0_ipv4_srcip[23:16], tx0_ipv4_srcip[31:24], ip_sum[7:0], ip_sum[15:8]};
-			16'h28: {txc, txd} <= {8'h00, tx0_udp_len[7:0], 4'h0, tx0_udp_len[11:8], 32'h5e_0d_5e_0d, ipv4_dstip[7:0], ipv4_dstip[15:8]};
+			16'h28: {txc, txd} <= {8'h00, tx0_udp_len[7:0], 4'h0, tx0_udp_len[11:8], 32'h09_00_09_00, ipv4_dstip[7:0], ipv4_dstip[15:8]};
 			16'h30: begin
-				{txc, txd} <= {8'h00, global_counter[31:24], magic_code[7:0], magic_code[15:8], magic_code[23:16], magic_code[31:24], magic_code[39:32], 16'h00_00};
-				tmp_counter[23:0] <= global_counter[23:0];
+				{txc, txd} <= {8'h00, global_counter[23:16], global_counter[31:24], magic_code[7:0], magic_code[15:8], magic_code[23:16], magic_code[31:24], 16'h00_00};
+				tmp_counter[15:0] <= global_counter[15:0];
 			end
-			16'h38: {txc, txd} <= {8'h00, 40'h00_00_00_00_00, tmp_counter[7:0], tmp_counter[15:8], tmp_counter[23:16]};
+			16'h38: {txc, txd} <= {8'h00, tv_usec[23:16], tv_usec[31:25], tv_sec[7:0],tv_sec[15:8], tv_sec[23:16], tv_sec[31:24], tmp_counter[7:0], tmp_counter[15:8]};
 			16'h40: begin
-				{txc, txd} <= {8'h00, 32'he5_e5_e5_e5, 32'h_00_00_00_00};
+				{txc, txd} <= {8'h00, 32'he5_e5_e5_e5, 16'h_00_00, tv_usec[7:0], tv_usec[15:8]};
 				crc_rewrite <= 1'b1;
 			end
 			16'h48: begin
@@ -225,6 +228,8 @@ always @(posedge sys_clk) begin
 		endcase
 	end
 end
+
+assign tv_usec[31:0] = {16'h0000, tmp_counter[15:0]};
 
 assign xgmii_0_txd = txd2;
 assign xgmii_0_txc = txc2;
