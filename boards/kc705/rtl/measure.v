@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 `include "../rtl/setup.v"
-`define DEBUG
+//`define DEBUG
 
 module measure (
 	input	 sys_rst,
@@ -62,9 +62,7 @@ module measure (
 	output [23:0] rx3_latency,
 	output [31:0] rx3_ipv4_ip,
 
-	output reg [31:0] global_counter,
-	output [31:0] count_2976_latency
-
+	output reg [31:0] global_counter
 );
 
 //-----------------------------------
@@ -244,7 +242,7 @@ measure_core # (
 ) measure_phy1 (
 	.sys_rst(sys_rst),
 	.sys_clk(sys_clk),
-	.pci_clk(pci_clk),
+	.pci_clk(sys_clk),
 	.sec_oneshot(sec_oneshot),
 	.global_counter(global_counter),
 
@@ -257,17 +255,15 @@ measure_core # (
 	.rx_throughput(rx1_throughput),
 	.rx_latency(rx1_latency),
 	.rx_ipv4_ip(rx1_ipv4_ip),
-	.tx_ipv6(tx_ipv6),
-
-	.count_2976_latency(count_2976_latency)
+	.tx_ipv6(tx_ipv6)
 );
 
 `ifdef DEBUG
 assign xgmii_1_txd = txd2;
 assign xgmii_1_txc = txc2;
-`else
-assign xgmii_1_txd = 64'h07_07_07_07_07_07_07_07;
-assign xgmii_1_txc = 8'hff;
+//`else
+//assign xgmii_1_txd = 64'h07_07_07_07_07_07_07_07;
+//assign xgmii_1_txc = 8'hff;
 `endif
 `ifdef ENABE_XGMII23
 `ifdef DEBUG
