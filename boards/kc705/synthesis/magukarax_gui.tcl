@@ -12,6 +12,8 @@ create_project -name ${design_top} -force -dir "./${proj_dir}" -part ${device}
 set_property top ${design_top} [current_fileset]
 set_property verilog_define {{USE_VIVADO=1}} [current_fileset]
 
+add_files -fileset constrs_1 -norecurse ../constraints/xilinx_pcie_7x_ep_x4g2_KC705_REVC.xdc
+set_property used_in_synthesis true [get_files ../constraints/xilinx_pcie_7x_ep_x4g2_KC705_REVC.xdc]
 #add_files -fileset constrs_1 -norecurse ../constraints/k7_conn_pcie.xdc
 #set_property used_in_synthesis true [get_files ../constraints/k7_conn_pcie.xdc]
 add_files -fileset constrs_1 -norecurse ./${impl_const}
@@ -19,6 +21,7 @@ set_property used_in_synthesis true [get_files ./${impl_const}]
 
 # Project Design Files from IP Catalog (comment out IPs using legacy Coregen cores)
 import_ip -files {../ip_catalog/ten_gig_eth_pcs_pma_ip.xci} -name ten_gig_eth_pcs_pma_ip 
+import_ip -files {../ip_catalog/pcie_7x_0.xci} -name pcie_7x_0
 
 # Other Custom logic sources/rtl files
 read_verilog "../rtl/network_path/xgbaser_gt_diff_quad_wrapper.v"
@@ -30,6 +33,18 @@ read_verilog "../rtl/measure.v"
 read_verilog "../rtl/measure_core.v"
 read_verilog "../../../cores/crc32/rtl/CRC32_D64.v"
 read_verilog "../../../cores/crc32/rtl/CRC32_D32.v"
+read_verilog "../rtl/pcie/xilinx_pcie_2_1_ep_7x.v"
+read_verilog "../rtl/pcie/support/pcie_7x_0_pipe_clock.v"
+read_verilog "../rtl/pcie/support/pcie_7x_0_support.v"
+read_verilog "../rtl/pcie/pcie_app_7x.v"
+read_verilog "../rtl/pcie/EP_MEM.v"
+read_verilog "../rtl/pcie/PIO.v"
+read_verilog "../rtl/pcie/PIO_EP.v"
+read_verilog "../rtl/pcie/PIO_EP_MEM_ACCESS.v"
+read_verilog "../rtl/pcie/PIO_RX_ENGINE.v"
+read_verilog "../rtl/pcie/PIO_TO_CTRL.v"
+read_verilog "../rtl/pcie/PIO_TX_ENGINE.v"
+
 
 # NGC files
 #read_edif "../ip_cores/dma/netlist/eval/dma_back_end_axi.ngc"
