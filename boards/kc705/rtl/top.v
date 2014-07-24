@@ -14,7 +14,7 @@ module top (
 	output xphy1_txn, 
 	input xphy1_rxp, 
 	input xphy1_rxn,
-`ifdef ENABE_XGMII23
+`ifdef ENABLE_XGMII23
 	output xphy2_txp, 
 	output xphy2_txn, 
 	input xphy2_rxp, 
@@ -334,7 +334,7 @@ network_path network_path_inst_1 (
 	.xgmii_rxc(xgmii1_rxc)
 ); 
 
-`ifdef ENABE_XGMII23
+`ifdef ENABLE_XGMII23
 // ---------------
 // GT2 instance
 // ---------------
@@ -434,7 +434,7 @@ network_path network_path_inst_3 (
 	.xgmii_rxd(xgmii3_rxd),
 	.xgmii_rxc(xgmii3_rxc)
 ); 
-`endif    //ENABE_XGMII23
+`endif    //ENABLE_XGMII23
 
 
 `ifdef USE_DIFF_QUAD
@@ -511,7 +511,7 @@ measure measure_inst (
 	.xgmii_1_rxd(xgmii1_rxd),
 	.xgmii_1_rxc(xgmii1_rxc),
 
-`ifdef ENABE_XGMII23
+`ifdef ENABLE_XGMII23
 	.xgmii_2_txd(xgmii2_txd),
 	.xgmii_2_txc(xgmii2_txc),
 	.xgmii_2_rxd(xgmii2_rxd),

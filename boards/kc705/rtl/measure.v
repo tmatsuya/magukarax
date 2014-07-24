@@ -17,7 +17,7 @@ module measure (
 	input [63:0] xgmii_1_rxd,
 	input [7:0] xgmii_1_rxc,
 
-`ifdef ENABE_XGMII23
+`ifdef ENABLE_XGMII23
 	output [63:0] xgmii_2_txd,
 	output [7:0] xgmii_2_txc,
 	input [63:0] xgmii_2_rxd,
@@ -265,7 +265,7 @@ assign xgmii_1_txc = txc2;
 //assign xgmii_1_txd = 64'h07_07_07_07_07_07_07_07;
 //assign xgmii_1_txc = 8'hff;
 `endif
-`ifdef ENABE_XGMII23
+`ifdef ENABLE_XGMII23
 `ifdef DEBUG
 assign xgmii_2_txd = txd2;
 assign xgmii_2_txc = txc2;
