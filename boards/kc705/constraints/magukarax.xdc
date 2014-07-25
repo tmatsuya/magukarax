@@ -205,8 +205,8 @@ set_clock_groups -name async_txoutclk_refclk -asynchronous -group [get_clocks -i
 # FLASH programming - BPI Sync Mode fast 
 #----------------------------------------
 
-set_property IOSTANDARD LVCMOS25 [get_ports emcclk]
-set_property PACKAGE_PIN R24 [get_ports emcclk]
+#set_property IOSTANDARD LVCMOS25 [get_ports emcclk]
+#set_property PACKAGE_PIN R24 [get_ports emcclk]
 
 #PMBUS LOC
 #set_property PACKAGE_PIN AG17 [get_ports pmbus_clk]

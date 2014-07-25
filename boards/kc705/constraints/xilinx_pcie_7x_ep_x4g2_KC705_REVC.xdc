@@ -130,18 +130,18 @@ set_property LOC G25 [get_ports sys_rst_n]
 # LED 0-2 should be ON if link is up and functioning correctly
 # LED 3 should be blinking if user applicaiton is receiving valid clock
 #
-set_property IOSTANDARD LVCMOS15 [get_ports led_0]
-set_property IOSTANDARD LVCMOS15 [get_ports led_1]
-set_property IOSTANDARD LVCMOS15 [get_ports led_2]
+#set_property IOSTANDARD LVCMOS15 [get_ports led_0]
+#set_property IOSTANDARD LVCMOS15 [get_ports led_1]
+#set_property IOSTANDARD LVCMOS15 [get_ports led_2]
 # SYS RESET = led_0
 # USER RESET = led_0
 # USER LINK UP = led_2
-set_property LOC AB8 [get_ports led_0]
-set_property LOC AA8 [get_ports led_1]
-set_property LOC AC9 [get_ports led_2]
-set_property IOSTANDARD LVCMOS15 [get_ports led_3]
+#set_property LOC AB8 [get_ports led_0]
+#set_property LOC AA8 [get_ports led_1]
+#set_property LOC AC9 [get_ports led_2]
+#set_property IOSTANDARD LVCMOS15 [get_ports led_3]
 # USER CLK HEART BEAT = led_3
-set_property LOC AB9 [get_ports led_3]
+#set_property LOC AB9 [get_ports led_3]
 
 
 ###############################################################################
