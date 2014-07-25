@@ -89,7 +89,38 @@ module PIO_EP #(
   output                        req_compl,
   output                        compl_done,
 
-  input   [15:0]                cfg_completer_id
+  input   [15:0]                cfg_completer_id,
+
+	// PCIe user isters
+	output tx0_enable,
+	output tx0_ipv6,
+	output tx0_fullroute,
+	output tx0_req_arp,
+	output [15:0] tx0_frame_len,
+	output [31:0] tx0_inter_frame_gap,
+	output [31:0] tx0_ipv4_srcip,
+	output [47:0] tx0_src_mac,
+	output [31:0] tx0_ipv4_gwip,
+	input [47:0] tx0_dst_mac,
+	output [31:0] tx0_ipv4_dstip,
+	output [127:0] tx0_ipv6_srcip,
+	output [127:0] tx0_ipv6_dstip,
+	input [31:0] tx0_pps,
+	input [31:0] tx0_throughput,
+	input [31:0] tx0_ipv4_ip,
+	input [31:0] rx1_pps,
+	input [31:0] rx1_throughput,
+	input [23:0] rx1_latency,
+	input [31:0] rx1_ipv4_ip,
+	input [31:0] rx2_pps,
+	input [31:0] rx2_throughput,
+	input [23:0] rx2_latency,
+	input [31:0] rx2_ipv4_ip,
+	input [31:0] rx3_pps,
+	input [31:0] rx3_throughput,
+	input [23:0] rx3_latency,
+	input [31:0] rx3_ipv4_ip
+
 );
 
     // Local wires
@@ -142,7 +173,37 @@ module PIO_EP #(
       .wr_be(wr_be),         // I [7:0]
       .wr_data(wr_data),     // I [31:0]
       .wr_en(wr_en),         // I
-      .wr_busy(wr_busy)      // O
+      .wr_busy(wr_busy),     // O
+
+	// PCIe user registers
+	.tx0_enable(tx0_enable),
+	.tx0_ipv6(tx0_ipv6),
+	.tx0_fullroute(tx0_fullroute),
+	.tx0_req_arp(tx0_req_arp),
+	.tx0_frame_len(tx0_frame_len),
+	.tx0_inter_frame_gap(tx0_inter_frame_gap),
+	.tx0_ipv4_srcip(tx0_ipv4_srcip),
+	.tx0_src_mac(tx0_src_mac),
+	.tx0_ipv4_gwip(tx0_ipv4_gwip),
+	.tx0_dst_mac(tx0_dst_mac),
+	.tx0_ipv4_dstip(tx0_ipv4_dstip),
+	.tx0_ipv6_srcip(tx0_ipv6_srcip),
+	.tx0_ipv6_dstip(tx0_ipv6_dstip),
+	.tx0_pps(tx0_pps),
+	.tx0_throughput(tx0_throughput),
+	.tx0_ipv4_ip(tx0_ipv4_ip),
+	.rx1_pps(rx1_pps),
+	.rx1_throughput(rx1_throughput),
+	.rx1_latency(rx1_latency),
+	.rx1_ipv4_ip(rx1_ipv4_ip),
+	.rx2_pps(rx2_pps),
+	.rx2_throughput(rx2_throughput),
+	.rx2_latency(rx2_latency),
+	.rx2_ipv4_ip(rx2_ipv4_ip),
+	.rx3_pps(rx3_pps),
+	.rx3_throughput(rx3_throughput),
+	.rx3_latency(rx3_latency),
+	.rx3_ipv4_ip(rx3_ipv4_ip)
       
       );
 

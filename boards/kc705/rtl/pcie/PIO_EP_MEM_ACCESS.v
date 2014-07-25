@@ -1,344 +1,298 @@
-//-----------------------------------------------------------------------------
-//
-// (c) Copyright 2010-2011 Xilinx, Inc. All rights reserved.
-//
-// This file contains confidential and proprietary information
-// of Xilinx, Inc. and is protected under U.S. and
-// international copyright and other intellectual property
-// laws.
-//
-// DISCLAIMER
-// This disclaimer is not a license and does not grant any
-// rights to the materials distributed herewith. Except as
-// otherwise provided in a valid license issued to you by
-// Xilinx, and to the maximum extent permitted by applicable
-// law: (1) THESE MATERIALS ARE MADE AVAILABLE "AS IS" AND
-// WITH ALL FAULTS, AND XILINX HEREBY DISCLAIMS ALL WARRANTIES
-// AND CONDITIONS, EXPRESS, IMPLIED, OR STATUTORY, INCLUDING
-// BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, NON-
-// INFRINGEMENT, OR FITNESS FOR ANY PARTICULAR PURPOSE; and
-// (2) Xilinx shall not be liable (whether in contract or tort,
-// including negligence, or under any other theory of
-// liability) for any loss or damage of any kind or nature
-// related to, arising under or in connection with these
-// materials, including for any direct, or any indirect,
-// special, incidental, or consequential loss or damage
-// (including loss of data, profits, goodwill, or any type of
-// loss or damage suffered as a result of any action brought
-// by a third party) even if such damage or loss was
-// reasonably foreseeable or Xilinx had been advised of the
-// possibility of the same.
-//
-// CRITICAL APPLICATIONS
-// Xilinx products are not designed or intended to be fail-
-// safe, or for use in any application requiring fail-safe
-// performance, such as life-support or safety devices or
-// systems, Class III medical devices, nuclear facilities,
-// applications related to the deployment of airbags, or any
-// other applications that could lead to death, personal
-// injury, or severe property or environmental damage
-// (individually and collectively, "Critical
-// Applications"). Customer assumes the sole risk and
-// liability of any use of Xilinx products in Critical
-// Applications, subject only to applicable laws and
-// regulations governing limitations on product liability.
-//
-// THIS COPYRIGHT NOTICE AND DISCLAIMER MUST BE RETAINED AS
-// PART OF THIS FILE AT ALL TIMES.
-//
-//-----------------------------------------------------------------------------
-// Project    : Series-7 Integrated Block for PCI Express
-// File       : PIO_EP_MEM_ACCESS.v
-// Version    : 3.0
-//--
-//-- Description: Endpoint Memory Access Unit. This module provides access functions
-//--              to the Endpoint memory aperture.
-//--
-//--              Read Access: Module returns data for the specifed address and
-//--              byte enables selected.
-//--
-//--              Write Access: Module accepts data, byte enables and updates
-//--              data when write enable is asserted. Modules signals write busy
-//--              when data write is in progress.
-//--
-//--------------------------------------------------------------------------------
-
 `timescale 1ps/1ps
 
 (* DowngradeIPIdentifiedWarnings = "yes" *)
 module PIO_EP_MEM_ACCESS  #(
-  parameter TCQ = 1
+	parameter TCQ = 1
 ) (
 
-  clk,
-  rst_n,
+	input clk,
+	input rst_n,
 
-  // Read Access
+	// Read Access
+	input  [10:0] rd_addr,     // I [10:0]  Read Address
+	input   [3:0] rd_be,       // I [3:0]   Read Byte Enable
+	output [31:0] rd_data,     // O [31:0]  Read Data
 
-  rd_addr,     // I [10:0]  Read Address
-  rd_be,       // I [3:0]   Read Byte Enable
-  rd_data,     // O [31:0]  Read Data
+	// Write Access
+	input  [10:0] wr_addr,     // I [10:0]  Write Address
+	input   [7:0] wr_be,       // I [7:0]   Write Byte Enable
+	input  [31:0] wr_data,     // I [31:0]  Write Data
+	input	 wr_en,       // I	 Write Enable
+	output	wr_busy,      // O	 Write Controller Busy
 
-  // Write Access
-
-  wr_addr,     // I [10:0]  Write Address
-  wr_be,       // I [7:0]   Write Byte Enable
-  wr_data,     // I [31:0]  Write Data
-  wr_en,       // I         Write Enable
-  wr_busy      // O         Write Controller Busy
+	// PCIe user registers
+	output reg    tx0_enable,
+	output reg    tx0_ipv6,
+	output reg    tx0_fullroute,
+	output reg    tx0_req_arp,
+	output reg [15:0] tx0_frame_len,
+	output reg [31:0] tx0_inter_frame_gap,
+	output reg [31:0] tx0_ipv4_srcip,
+	output reg [47:0] tx0_src_mac,
+	output reg [31:0] tx0_ipv4_gwip,
+	input      [47:0] tx0_dst_mac,
+	output reg [31:0] tx0_ipv4_dstip,
+	output reg [127:0] tx0_ipv6_srcip,
+	output reg [127:0] tx0_ipv6_dstip,
+	input [31:0]  tx0_pps,
+	input [31:0]  tx0_throughput,
+	input [31:0]  tx0_ipv4_ip,
+	input [31:0]  rx1_pps,
+	input [31:0]  rx1_throughput,
+	input [23:0]  rx1_latency,
+	input [31:0]  rx1_ipv4_ip,
+	input [31:0]  rx2_pps,
+	input [31:0]  rx2_throughput,
+	input [23:0]  rx2_latency,
+	input [31:0]  rx2_ipv4_ip,
+	input [31:0]  rx3_pps,
+	input [31:0]  rx3_throughput,
+	input [23:0]  rx3_latency,
+	input [31:0]  rx3_ipv4_ip
 
 );
 
-  input            clk;
-  input            rst_n;
-
-  //  Read Port
-
-  input  [10:0]    rd_addr;
-  input  [3:0]     rd_be;
-  output [31:0]    rd_data;
-
-  //  Write Port
-
-  input  [10:0]    wr_addr;
-  input  [7:0]     wr_be;
-  input  [31:0]    wr_data;
-  input            wr_en;
-  output           wr_busy;
-
-  localparam PIO_MEM_ACCESS_WR_RST   = 3'b000;
-  localparam PIO_MEM_ACCESS_WR_WAIT  = 3'b001;
-  localparam PIO_MEM_ACCESS_WR_READ  = 3'b010;
-  localparam PIO_MEM_ACCESS_WR_WRITE = 3'b100;
-
-  wire   [31:0]     rd_data;
-
-  reg   [31:0]      rd_data_raw_o;
-
-  wire  [31:0]     rd_data0_o, rd_data1_o, rd_data2_o, rd_data3_o;
-
-  wire             rd_data0_en, rd_data1_en, rd_data2_en, rd_data3_en;
-
-  wire             wr_busy;
-  reg              write_en;
-  reg   [31:0]     post_wr_data;
-  reg   [31:0]     w_pre_wr_data;
-
-  reg   [2:0]      wr_mem_state;
-
-  reg   [31:0]     pre_wr_data;
-  wire  [31:0]     w_pre_wr_data0;
-  wire  [31:0]     w_pre_wr_data1;
-  wire  [31:0]     w_pre_wr_data2;
-  wire  [31:0]     w_pre_wr_data3;
-
-  wire  [7:0]      w_pre_wr_data_b0;
-  wire  [7:0]      w_pre_wr_data_b1;
-  wire  [7:0]      w_pre_wr_data_b2;
-  wire  [7:0]      w_pre_wr_data_b3;
-
-  wire  [7:0]      w_wr_data_b0;
-  wire  [7:0]      w_wr_data_b1;
-  wire  [7:0]      w_wr_data_b2;
-  wire  [7:0]      w_wr_data_b3;
-
-
-  // Memory Write Process
-
-  //  Extract current data bytes. These need to be swizzled
-  //  BRAM storage format :
-  //    data[31:0] = { byte[3], byte[2], byte[1], byte[0] (lowest addr) }
-
-  assign w_pre_wr_data_b3 = pre_wr_data[31:24];
-  assign w_pre_wr_data_b2 = pre_wr_data[23:16];
-  assign w_pre_wr_data_b1 = pre_wr_data[15:08];
-  assign w_pre_wr_data_b0 = pre_wr_data[07:00];
-
-  //  Extract new data bytes from payload
-  //  TLP Payload format :
-  //    data[31:0] = { byte[0] (lowest addr), byte[2], byte[1], byte[3] }
-
-  assign w_wr_data_b3 = wr_data[07:00];
-  assign w_wr_data_b2 = wr_data[15:08];
-  assign w_wr_data_b1 = wr_data[23:16];
-  assign w_wr_data_b0 = wr_data[31:24];
-
-  always @(posedge clk) begin
-
-    if ( !rst_n )
-    begin
-
-      pre_wr_data <= #TCQ 32'b0;
-      post_wr_data <= #TCQ 32'b0;
-      pre_wr_data <= #TCQ 32'b0;
-      write_en   <= #TCQ 1'b0;
-
-      wr_mem_state <= #TCQ PIO_MEM_ACCESS_WR_RST;
-
-    end // if !rst_n
-    else
-    begin
-
-      case ( wr_mem_state )
-
-        PIO_MEM_ACCESS_WR_RST : begin
-
-          if (wr_en)
-          begin // read state
-            wr_mem_state <= #TCQ PIO_MEM_ACCESS_WR_WAIT; //Pipelining happens in RAM's internal output reg.
-          end
-          else
-          begin
-            write_en <= #TCQ 1'b0;
-            wr_mem_state <= #TCQ PIO_MEM_ACCESS_WR_RST;
-          end
-        end // PIO_MEM_ACCESS_WR_RST
-
-        PIO_MEM_ACCESS_WR_WAIT : begin
-
-          write_en <= #TCQ 1'b0;
-          wr_mem_state <= #TCQ PIO_MEM_ACCESS_WR_READ ;
-
-        end // PIO_MEM_ACCESS_WR_WAIT
-
-        PIO_MEM_ACCESS_WR_READ : begin
-
-            // Now save the selected BRAM B port data out
-
-            pre_wr_data <= #TCQ w_pre_wr_data;
-            write_en <= #TCQ 1'b0;
-            wr_mem_state <= #TCQ PIO_MEM_ACCESS_WR_WRITE;
-
-        end // PIO_MEM_ACCESS_WR_READ
-
-        PIO_MEM_ACCESS_WR_WRITE : begin
-
-          //Merge new enabled data and write target BlockRAM location
-
-          post_wr_data <= #TCQ {{wr_be[3] ? w_wr_data_b3 : w_pre_wr_data_b3},
-                               {wr_be[2] ? w_wr_data_b2 : w_pre_wr_data_b2},
-                               {wr_be[1] ? w_wr_data_b1 : w_pre_wr_data_b1},
-                               {wr_be[0] ? w_wr_data_b0 : w_pre_wr_data_b0}};
-          write_en     <= #TCQ 1'b1;
-          wr_mem_state <= #TCQ PIO_MEM_ACCESS_WR_RST;
-
-        end // PIO_MEM_ACCESS_WR_WRITE
-
-        default : begin
-          // default case stmt
-          wr_mem_state <= #TCQ PIO_MEM_ACCESS_WR_RST;
-        end // default
-
-      endcase // case (wr_mem_state)
-    end // if rst_n
-  end
-
-  // Write controller busy
-
-  assign wr_busy = wr_en | (wr_mem_state != PIO_MEM_ACCESS_WR_RST);
-
-  //  Select BlockRAM output based on higher 2 address bits
-
-  always @* 
-  begin
-    case ({wr_addr[10:9]}) // synthesis parallel_case full_case
-
-      2'b00 : w_pre_wr_data = w_pre_wr_data0;
-      2'b01 : w_pre_wr_data = w_pre_wr_data1;
-      2'b10 : w_pre_wr_data = w_pre_wr_data2;
-      2'b11 : w_pre_wr_data = w_pre_wr_data3;
-
-    endcase
-  end
-
-  //  Memory Read Controller
-
-  assign rd_data0_en = {rd_addr[10:9]  == 2'b00};
-  assign rd_data1_en = {rd_addr[10:9]  == 2'b01};
-  assign rd_data2_en = {rd_addr[10:9]  == 2'b10};
-  assign rd_data3_en = {rd_addr[10:9]  == 2'b11};
-
-  always @(rd_addr or rd_data0_o or rd_data1_o or rd_data2_o or rd_data3_o)
-  begin
-
-    case ({rd_addr[10:9]}) // synthesis parallel_case full_case
-
-      2'b00 : rd_data_raw_o = rd_data0_o;
-      2'b01 : rd_data_raw_o = rd_data1_o;
-      2'b10 : rd_data_raw_o = rd_data2_o;
-      2'b11 : rd_data_raw_o = rd_data3_o;
-
-    endcase
-
-  end
-
-  // Handle Read byte enables
-
-  assign rd_data = {{rd_be[0] ? rd_data_raw_o[07:00] : 8'h0},
-                      {rd_be[1] ? rd_data_raw_o[15:08] : 8'h0},
-                      {rd_be[2] ? rd_data_raw_o[23:16] : 8'h0},
-                      {rd_be[3] ? rd_data_raw_o[31:24] : 8'h0}};
-
-  EP_MEM EP_MEM_inst (
-
-     .clk_i(clk),
-
-     .a_rd_a_i_0(rd_addr[8:0]),                              // I [8:0]
-     .a_rd_en_i_0(rd_data0_en),                                // I [1:0]
-     .a_rd_d_o_0(rd_data0_o),                                  // O [31:0]
-
-     .b_wr_a_i_0(wr_addr[8:0]),                              // I [8:0]
-     .b_wr_d_i_0(post_wr_data),                                // I [31:0]
-     .b_wr_en_i_0({write_en & (wr_addr[10:9] == 2'b00)}),    // I
-     .b_rd_d_o_0(w_pre_wr_data0[31:0]),                        // O [31:0]
-     .b_rd_en_i_0({wr_addr[10:9] == 2'b00}),                 // I
-
-     .a_rd_a_i_1(rd_addr[8:0]),                              // I [8:0]
-     .a_rd_en_i_1(rd_data1_en),                                // I [1:0]
-     .a_rd_d_o_1(rd_data1_o),                                  // O [31:0]
-
-     .b_wr_a_i_1(wr_addr[8:0]),                              // [8:0]
-     .b_wr_d_i_1(post_wr_data),                                // [31:0]
-     .b_wr_en_i_1({write_en & (wr_addr[10:9] == 2'b01)}),    // I
-     .b_rd_d_o_1(w_pre_wr_data1[31:0]),                        // [31:0]
-     .b_rd_en_i_1({wr_addr[10:9] == 2'b01}),                 // I
-
-     .a_rd_a_i_2(rd_addr[8:0]),                              // I [8:0]
-     .a_rd_en_i_2(rd_data2_en),                                // I [1:0]
-     .a_rd_d_o_2(rd_data2_o),                                  // O [31:0]
-
-     .b_wr_a_i_2(wr_addr[8:0]),                              // I [8:0]
-     .b_wr_d_i_2(post_wr_data),                                // I [31:0]
-     .b_wr_en_i_2({write_en & (wr_addr[10:9] == 2'b10)}),    // I
-     .b_rd_d_o_2(w_pre_wr_data2[31:0]),                        // I [31:0]
-     .b_rd_en_i_2({wr_addr[10:9] == 2'b10}),                 // I
-
-     .a_rd_a_i_3(rd_addr[8:0]),                              // [8:0]
-     .a_rd_en_i_3(rd_data3_en),                                // [1:0]
-     .a_rd_d_o_3(rd_data3_o),                                  // O [31:0]
-
-     .b_wr_a_i_3(wr_addr[8:0]),                              // I [8:0]
-     .b_wr_d_i_3(post_wr_data),                                // I [31:0]
-     .b_wr_en_i_3({write_en & (wr_addr[10:9] == 2'b11)}),    // I
-     .b_rd_d_o_3(w_pre_wr_data3[31:0]),                        // I [31:0]
-     .b_rd_en_i_3({wr_addr[10:9] == 2'b11})                  // I
-
-  );
-
-  // synthesis translate_off
-  reg  [8*20:1] state_ascii;
-  always @(wr_mem_state)
-  begin
-    case (wr_mem_state)
-      PIO_MEM_ACCESS_WR_RST    : state_ascii <= #TCQ "PIO_MEM_WR_RST";
-      PIO_MEM_ACCESS_WR_WAIT   : state_ascii <= #TCQ "PIO_MEM_WR_WAIT";
-      PIO_MEM_ACCESS_WR_READ   : state_ascii <= #TCQ "PIO_MEM_WR_READ";
-      PIO_MEM_ACCESS_WR_WRITE  : state_ascii <= #TCQ "PIO_MEM_WR_WRITE";
-      default                  : state_ascii <= #TCQ "PIO MEM STATE ERR";
-    endcase
-  end
-  // synthesis translate_on
-
+reg [31:0] read_data;
+
+always @(posedge clk) begin
+	if (rst_n == 1'b0) begin
+		// PCIe User Registers
+		tx0_enable    <= 1'b1;
+		tx0_ipv6      <= 1'b0;
+		tx0_fullroute <= 1'b0;
+		tx0_req_arp   <= 1'b0;
+		tx0_frame_len <= 16'd64;
+		tx0_inter_frame_gap <= 32'd12;
+		tx0_src_mac   <= 48'h003776_000100;
+		tx0_ipv4_gwip <= {8'd10,8'd0,8'd20,8'd1};
+		tx0_ipv4_srcip<= {8'd10,8'd0,8'd20,8'd105};
+		tx0_ipv4_dstip<= {8'd10,8'd0,8'd21,8'd105};
+		tx0_ipv6_srcip<= 128'h3776_0000_0000_0020_0000_0000_0000_0105;
+		tx0_ipv6_dstip<= 128'h3776_0000_0000_0021_0000_0000_0000_0105;
+	end else begin
+		case (rd_addr[5:0])
+			6'h00: // tx enable bit
+				read_data[31:0] <= {tx0_enable, tx0_ipv6, 5'b0, tx0_fullroute, 24'h0};
+			6'h01: // tx0 frame length
+				read_data[31:0] <= {16'h0, tx0_frame_len[15:0]};
+			6'h02: // tx0 inter_frame_gap
+				read_data[31:0] <= {tx0_inter_frame_gap[31:0]};
+			6'h04: // tx0 ipv4_src_ip
+				read_data[31:0] <= {tx0_ipv4_srcip[31:0]};
+			6'h05: // tx0 src_mac 47-32bit
+				read_data[31:0] <= {16'h00, tx0_src_mac[47:32]};
+			6'h06: // tx0 src_mac 31-00bit
+				read_data[31:0] <= {tx0_src_mac[31:0]};
+			6'h08: // tx0 ipv4_gwip
+				read_data[31:0] <= {tx0_ipv4_gwip[31:0]};
+			6'h09: // tx0 dst_mac 47-32bit
+				read_data[31:0] <= {16'h00, tx0_dst_mac[47:32]};
+			6'h0a: // tx0 dst_mac 31-00bit
+				read_data[31:0] <= {tx0_dst_mac[31:0]};
+			6'h0b: // tx0 ipv4_dstip
+				read_data[31:0] <= {tx0_ipv4_dstip[31:0]};
+			6'h10: // tx0 pps
+				read_data[31:0] <= {tx0_pps[31:0]};
+			6'h11: // tx0 throughput
+				read_data[31:0] <= {tx0_throughput[31:0]};
+			6'h13: // tx0_ipv4_ip
+				read_data[31:0] <= {tx0_ipv4_ip[31:0]};
+			6'h14: // rx1 pps
+				read_data[31:0] <= {rx1_pps[31:0]};
+			6'h15: // rx1 throughput
+				read_data[31:0] <= {rx1_throughput[31:0]};
+			6'h16: // rx1_latency
+				read_data[31:0] <= {8'h0, rx1_latency[23:0]};
+			6'h17: // rx1_ipv4_ip
+				read_data[31:0] <= {rx1_ipv4_ip[31:0]};
+			6'h18: // rx2 pps
+				read_data[31:0] <= {rx2_pps[31:0]};
+			6'h19: // rx2 throughput
+				read_data[31:0] <= {rx2_throughput[31:0]};
+			6'h1a: // rx2_latency
+				read_data[31:0] <= {8'h0, rx2_latency[23:0]};
+			6'h1b: // rx2_ipv4_ip
+				read_data[31:0] <= {rx2_ipv4_ip[31:0]};
+			6'h1c: // rx3 pps
+				read_data[31:0] <= {rx3_pps[31:0]};
+			6'h1d: // rx3 throughput
+				read_data[31:0] <= {rx3_throughput[31:0]};
+			6'h1e: // rx3_latency
+				read_data[31:0] <= {8'h0, rx3_latency[23:0]};
+			6'h1f: // rx3_ipv4_ip
+				read_data[31:0] <= {rx3_ipv4_ip[31:0]};
+			6'h20: // tx0_ipv6_srcip
+				read_data[31:0] <= {tx0_ipv6_srcip[127:96]};
+			6'h21:  read_data[31:0] <= {tx0_ipv6_srcip[95:64]};
+			6'h22:  read_data[31:0] <= {tx0_ipv6_srcip[63:32]};
+			6'h23:  read_data[31:0] <= {tx0_ipv6_srcip[31: 0]};
+			6'h24: // tx0_ipv6_dstip
+				read_data[31:0] <= {tx0_ipv6_dstip[127:96]};
+			6'h25:  read_data[31:0] <= {tx0_ipv6_dstip[95:64]};
+			6'h26:  read_data[31:0] <= {tx0_ipv6_dstip[63:32]};
+			6'h27:  read_data[31:0] <= {tx0_ipv6_dstip[31: 0]};
+			default: read_data[31:0] <= 32'h0;
+		endcase
+		if (wr_en == 1'b1) begin
+			case (wr_addr[5:0])
+				6'h00: begin // tx enable bit
+					if (wr_be[0]) begin
+						tx0_enable <= wr_data[31];
+						tx0_ipv6   <= wr_data[30];
+						tx0_fullroute <= wr_data[24];
+					end
+				end
+				6'h01: begin // tx0 frame length
+					if (wr_be[2])
+						tx0_frame_len[15:8] <= wr_data[15: 8];
+					if (wr_be[3])
+						tx0_frame_len[ 7:0] <= wr_data[ 7: 0];
+				end
+				6'h02: begin // tx0 ipv4_inter_frame_gap
+					if (wr_be[0])
+						tx0_inter_frame_gap[31:24] <= wr_data[31:24];
+					if (wr_be[1])
+						tx0_inter_frame_gap[23:16] <= wr_data[23:16];
+					if (wr_be[2])
+						tx0_inter_frame_gap[15: 8] <= wr_data[15:8];
+					if (wr_be[3])
+						tx0_inter_frame_gap[ 7: 0] <= wr_data[7:0];
+				end
+				6'h03: begin // tx0 arp request command
+					tx0_req_arp   <= 1'b1;
+				end
+				6'h04: begin // tx0 ipv4_src_ip
+					if (wr_be[0])
+						tx0_ipv4_srcip[31:24] <= wr_data[31:24];
+					if (wr_be[1])
+						tx0_ipv4_srcip[23:16] <= wr_data[23:16];
+					if (wr_be[2])
+						tx0_ipv4_srcip[15: 8] <= wr_data[15:8];
+					if (wr_be[3])
+						tx0_ipv4_srcip[ 7: 0] <= wr_data[7:0];
+				end
+				6'h05: begin // tx0 src_mac 47-32bit
+					if (wr_be[2])
+						tx0_src_mac[47:40] <= wr_data[15: 8];
+					if (wr_be[3])
+						tx0_src_mac[39:32] <= wr_data[ 7: 0];
+				end
+				6'h06: begin // tx0 src_mac 31-00bit
+					if (wr_be[0])
+						tx0_src_mac[31:24] <= wr_data[31:24];
+					if (wr_be[1])
+						tx0_src_mac[23:16] <= wr_data[23:16];
+					if (wr_be[2])
+						tx0_src_mac[15: 8] <= wr_data[15:8];
+					if (wr_be[3])
+						tx0_src_mac[ 7: 0] <= wr_data[7:0];
+				end
+				6'h08: begin // tx0 ipv4_gwip
+					if (wr_be[0])
+						tx0_ipv4_gwip[31:24] <= wr_data[31:24];
+					if (wr_be[1])
+						tx0_ipv4_gwip[23:16] <= wr_data[23:16];
+					if (wr_be[2])
+						tx0_ipv4_gwip[15: 8] <= wr_data[15:8];
+					if (wr_be[3])
+						tx0_ipv4_gwip[ 7: 0] <= wr_data[7:0];
+				end
+				6'h0b: begin // tx0 ipv4_dstip
+					if (wr_be[0])
+						tx0_ipv4_dstip[31:24] <= wr_data[31:24];
+					if (wr_be[1])
+						tx0_ipv4_dstip[23:16] <= wr_data[23:16];
+					if (wr_be[2])
+						tx0_ipv4_dstip[15: 8] <= wr_data[15:8];
+					if (wr_be[3])
+						tx0_ipv4_dstip[ 7: 0] <= wr_data[7:0];
+				end
+				6'h20: begin // tx0_ipv6_srcip
+					if (wr_be[0])
+						tx0_ipv6_srcip[127:120] <= wr_data[31:24];
+					if (wr_be[1])
+						tx0_ipv6_srcip[119:112] <= wr_data[23:16];
+					if (wr_be[2])
+						tx0_ipv6_srcip[111:104] <= wr_data[15:8];
+					if (wr_be[3])
+						tx0_ipv6_srcip[103: 96] <= wr_data[7:0];
+				end
+				6'h21: begin
+					if (wr_be[0])
+						tx0_ipv6_srcip[95:88] <= wr_data[31:24];
+					if (wr_be[1])
+						tx0_ipv6_srcip[87:80] <= wr_data[23:16];
+					if (wr_be[2])
+						tx0_ipv6_srcip[79:72] <= wr_data[15:8];
+					if (wr_be[3])
+						tx0_ipv6_srcip[71:64] <= wr_data[7:0];
+				end
+				6'h22: begin
+					if (wr_be[0])
+						tx0_ipv6_srcip[63:56] <= wr_data[31:24];
+					if (wr_be[1])
+						tx0_ipv6_srcip[55:48] <= wr_data[23:16];
+					if (wr_be[2])
+						tx0_ipv6_srcip[47:40] <= wr_data[15:8];
+					if (wr_be[3])
+						tx0_ipv6_srcip[39:32] <= wr_data[7:0];
+				end
+				6'h23: begin
+					if (wr_be[0])
+						tx0_ipv6_srcip[31:24] <= wr_data[31:24];
+					if (wr_be[1])
+						tx0_ipv6_srcip[23:16] <= wr_data[23:16];
+					if (wr_be[2])
+						tx0_ipv6_srcip[15: 8] <= wr_data[15:8];
+					if (wr_be[3])
+						tx0_ipv6_srcip[ 7: 0] <= wr_data[7:0];
+				end
+				6'h24: begin // tx0_ipv6_dstip
+					if (wr_be[0])
+						tx0_ipv6_dstip[127:120] <= wr_data[31:24];
+					if (wr_be[1])
+						tx0_ipv6_dstip[119:112] <= wr_data[23:16];
+					if (wr_be[2])
+						tx0_ipv6_dstip[111:104] <= wr_data[15:8];
+					if (wr_be[3])
+						tx0_ipv6_dstip[103: 96] <= wr_data[7:0];
+				end
+				6'h25: begin
+					if (wr_be[0])
+						tx0_ipv6_dstip[95:88] <= wr_data[31:24];
+					if (wr_be[1])
+						tx0_ipv6_dstip[87:80] <= wr_data[23:16];
+					if (wr_be[2])
+						tx0_ipv6_dstip[79:72] <= wr_data[15:8];
+					if (wr_be[3])
+						tx0_ipv6_dstip[71:64] <= wr_data[7:0];
+				end
+				6'h26: begin
+					if (wr_be[0])
+						tx0_ipv6_dstip[63:56] <= wr_data[31:24];
+					if (wr_be[1])
+						tx0_ipv6_dstip[55:48] <= wr_data[23:16];
+					if (wr_be[2])
+						tx0_ipv6_dstip[47:40] <= wr_data[15:8];
+					if (wr_be[3])
+						tx0_ipv6_dstip[39:32] <= wr_data[7:0];
+				end
+				6'h27: begin
+					if (wr_be[0])
+						tx0_ipv6_dstip[31:24] <= wr_data[31:24];
+					if (wr_be[1])
+						tx0_ipv6_dstip[23:16] <= wr_data[23:16];
+					if (wr_be[2])
+						tx0_ipv6_dstip[15: 8] <= wr_data[15:8];
+					if (wr_be[3])
+						tx0_ipv6_dstip[ 7: 0] <= wr_data[7:0];
+				end
+			endcase
+		end
+	end
+end
+
+assign rd_data = read_data;
+assign wr_busy = 1'b0;
 
 endmodule
-
