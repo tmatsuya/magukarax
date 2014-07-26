@@ -5,6 +5,7 @@
 module measure (
 	input	 sys_rst,
 	input	 sys_clk,
+	input	 pci_clk,
 
 	// XGMII interfaces for 4 MACs
 	output [63:0] xgmii_0_txd,
@@ -242,7 +243,7 @@ measure_core # (
 ) measure_phy1 (
 	.sys_rst(sys_rst),
 	.sys_clk(sys_clk),
-	.pci_clk(sys_clk),
+	.pci_clk(pci_clk),
 	.sec_oneshot(sec_oneshot),
 	.global_counter(global_counter),
 

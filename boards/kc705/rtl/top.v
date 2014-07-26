@@ -67,6 +67,10 @@ assign sys_rst = button_c; // 1'b0;
 // Xilinx Hard Core Instantiation
 
 wire		clk156;
+`ifdef ENABLE_PCIE
+wire		user_clk;
+wire		user_reset;
+`endif
 
 wire [63:0]	xgmii0_txd, xgmii1_txd, xgmii2_txd, xgmii3_txd;
 wire [7:0]	xgmii0_txc, xgmii1_txc, xgmii2_txc, xgmii3_txc;
@@ -547,6 +551,7 @@ wire [31:0] rx3_ipv4_i;
 measure measure_inst (
 	.sys_rst(sys_rst),
 	.sys_clk(clk156),
+	.pci_clk(user_clk),
 
 	.xgmii_0_txd(xgmii0_txd),
 	.xgmii_0_txc(xgmii0_txc),
@@ -570,27 +575,27 @@ measure measure_inst (
 	.xgmii_3_rxc(xgmii3_rxc),
 `endif
 
-	.tx0_enable(1'b1),
-	.tx0_ipv6(1'b0),
-	.tx0_fullroute(1'b0),
-	.tx0_req_arp(1'b0),
-	.tx0_frame_len(16'd64),
-	.tx0_inter_frame_gap(32'd12),
-	.tx0_ipv4_srcip({8'd192, 8'd168, 8'd1, 8'd101}),
-	.tx0_src_mac(48'h001122_334455),
-	.tx0_ipv4_gwip({8'd192, 8'd168, 8'd1, 8'd1}),
-	.tx0_ipv6_srcip(),
-	.tx0_ipv6_dstip(48'h001122_334466),
-	.tx0_dst_mac(),
-	.tx0_ipv4_dstip({8'd192, 8'd168, 8'd2, 8'd102}),
-	.tx0_pps(),
-	.tx0_throughput(),
-	.tx0_ipv4_ip(),
+	.tx0_enable(tx0_enable),
+	.tx0_ipv6(tx0_ipv6),
+	.tx0_fullroute(tx0_fullroute),
+	.tx0_req_arp(tx0_req_arp),
+	.tx0_frame_len(tx0_frame_len),
+	.tx0_inter_frame_gap(tx0_inter_frame_gap),
+	.tx0_ipv4_srcip(tx0_ipv4_srcip),
+	.tx0_src_mac(tx0_src_mac),
+	.tx0_ipv4_gwip(tx0_ipv4_gwip),
+	.tx0_ipv6_srcip(tx0_ipv6_srcip),
+	.tx0_ipv6_dstip(tx0_ipv6_dstip),
+	.tx0_dst_mac(tx0_dst_mac),
+	.tx0_ipv4_dstip(tx0_ipv4_dstip),
+	.tx0_pps(tx0_pps),
+	.tx0_throughput(tx0_throughput),
+	.tx0_ipv4_ip(tx0_ipv4_ip),
 
-	.rx1_pps(),
-	.rx1_throughput(),
-	.rx1_latency(),
-	.rx1_ipv4_ip(),
+	.rx1_pps(rx1_pps),
+	.rx1_throughput(rx1_throughput),
+	.rx1_latency(rx1_latency),
+	.rx1_ipv4_ip(rx1_ipv4_ip),
 
 	.global_counter(global_counter)
 );
@@ -615,10 +620,6 @@ assign fmc_ok_led = 1'b1;
 //- This LED indicates FMC GBTCLK0 programmed OK
 assign fmc_clk_312_5 = (fmc_gbtclk0_fsel == 2'b11) ? 1'b1 : 1'b0;
 
-//endmodule
-
-
-
 
 
 
@@ -627,9 +628,6 @@ assign fmc_clk_312_5 = (fmc_gbtclk0_fsel == 2'b11) ? 1'b1 : 1'b0;
 `ifdef ENABLE_PCIE
 // Wire Declarations
   wire                                        pipe_mmcm_rst_n;
-
-  wire                                        user_clk;
-  wire                                        user_reset;
   wire                                        user_lnk_up;
 
   // Tx
