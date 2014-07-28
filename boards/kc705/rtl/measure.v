@@ -186,6 +186,7 @@ always @(posedge sys_clk) begin
 		txd <= 64'h0707070707070707;
 		txc <= 8'hff;
   		tx0_dst_mac <= 48'hffffffffffff;
+		tx_state <= TX_V4_SEND;
 	end else begin
 		crc_rewrite <= 1'b0;
 		txc2 <= txc;
@@ -193,37 +194,55 @@ always @(posedge sys_clk) begin
 			txd2 <= txd;
 		else
 			txd2 <= {crc32_outrev[7:0], crc32_outrev[15:8], crc32_outrev[23:16], crc32_outrev[31:24], txd[31:0]};
-		tx_counter <= tx_counter + 32'h8;
-		case (tx_counter[15:0] )
-			16'h00: begin
-				{txc, txd} <= {8'h01, 64'hd5_55_55_55_55_55_55_fb};
-				ip_sum <= 16'h4500 + {4'h0,tx0_ip_len[11:0]} + ipv4_id[15:0] + {ipv4_ttl[7:0],8'h11} + tx0_ipv4_srcip[31:16] + tx0_ipv4_srcip[15:0] + ipv4_dstip[31:16] + ipv4_dstip[15:0];
-				crc_init <= 1'b1;
+		case (tx_state)
+		TX_V4_SEND: begin
+			tx_counter <= tx_counter + 32'h8;
+			case (tx_counter[15:0] )
+				16'h00: begin
+					{txc, txd} <= {8'h01, 64'hd5_55_55_55_55_55_55_fb};
+					ip_sum <= 16'h4500 + {4'h0,tx0_ip_len[11:0]} + ipv4_id[15:0] + {ipv4_ttl[7:0],8'h11} + tx0_ipv4_srcip[31:16] + tx0_ipv4_srcip[15:0] + ipv4_dstip[31:16] + ipv4_dstip[15:0];
+					crc_init <= 1'b1;
+				end
+				16'h08: begin
+					{txc, txd} <= {8'h00, tx0_src_mac[39:32], tx0_src_mac[47:40], tx0_dst_mac[7:0], tx0_dst_mac[15:8], tx0_dst_mac[23:16], tx0_dst_mac[31:24], tx0_dst_mac[39:32], tx0_dst_mac[47:40]};
+					ip_sum <= ~(ip_sum[15:0] + ip_sum[23:16]);
+					crc_init <= 1'b0;
+				end
+				16'h10: {txc, txd} <= {8'h00, 32'h00_45_00_08, tx0_src_mac[7:0], tx0_src_mac[15:8], tx0_src_mac[23:16], tx0_src_mac[31:24]};
+				16'h18: {txc, txd} <= {8'h00, 8'h11, ipv4_ttl[7:0], 16'h00, ipv4_id[7:0], ipv4_id[15:8], tx0_ip_len[7:0], 4'h0, tx0_ip_len[11:8]};
+				16'h20: {txc, txd} <= {8'h00, ipv4_dstip[23:16], ipv4_dstip[31:24], tx0_ipv4_srcip[7:0], tx0_ipv4_srcip[15:8], tx0_ipv4_srcip[23:16], tx0_ipv4_srcip[31:24], ip_sum[7:0], ip_sum[15:8]};
+				16'h28: {txc, txd} <= {8'h00, tx0_udp_len[7:0], 4'h0, tx0_udp_len[11:8], 32'h09_00_09_00, ipv4_dstip[7:0], ipv4_dstip[15:8]};
+				16'h30: begin
+					{txc, txd} <= {8'h00, global_counter[23:16], global_counter[31:24], magic_code[7:0], magic_code[15:8], magic_code[23:16], magic_code[31:24], 16'h00_00};
+					tmp_counter[15:0] <= global_counter[15:0];
+				end
+				16'h38: {txc, txd} <= {8'h00, tv_usec[23:16], tv_usec[31:25], tv_sec[7:0],tv_sec[15:8], tv_sec[23:16], tv_sec[31:24], tmp_counter[7:0], tmp_counter[15:8]};
+				16'h40: begin
+					{txc, txd} <= {8'h00, 32'he5_e5_e5_e5, 16'h_00_00, tv_usec[7:0], tv_usec[15:8]};
+					crc_rewrite <= 1'b1;
+				end
+				16'h48: begin
+					{txc, txd} <= {8'hff, 64'h07_07_07_07_07_07_07_fd};
+					tx_counter <= 32'h0;
+					if (tx0_inter_frame_gap == 32'd0) begin
+						tx_state <= TX_V4_SEND;
+					end else begin
+						gap_count <= tx0_inter_frame_gap - 32'd1;
+						tx_state <= TX_GAP;
+					end
+				end
+				default: begin
+					{txc, txd} <= {8'hff, 64'h07_07_07_07_07_07_07_07};
+				end
+			endcase
+		end
+		TX_GAP: begin
+			{txc, txd} <= {8'hff, 64'h07_07_07_07_07_07_07_07};
+			gap_count <= gap_count - 32'd1;
+			if (gap_count == 32'd0) begin
+				tx_state <= TX_V4_SEND;
 			end
-			16'h08: begin
-				{txc, txd} <= {8'h00, tx0_src_mac[39:32], tx0_src_mac[47:40], tx0_dst_mac[7:0], tx0_dst_mac[15:8], tx0_dst_mac[23:16], tx0_dst_mac[31:24], tx0_dst_mac[39:32], tx0_dst_mac[47:40]};
-				ip_sum <= ~(ip_sum[15:0] + ip_sum[23:16]);
-				crc_init <= 1'b0;
-			end
-			16'h10: {txc, txd} <= {8'h00, 32'h00_45_00_08, tx0_src_mac[7:0], tx0_src_mac[15:8], tx0_src_mac[23:16], tx0_src_mac[31:24]};
-			16'h18: {txc, txd} <= {8'h00, 8'h11, ipv4_ttl[7:0], 16'h00, ipv4_id[7:0], ipv4_id[15:8], tx0_ip_len[7:0], 4'h0, tx0_ip_len[11:8]};
-			16'h20: {txc, txd} <= {8'h00, ipv4_dstip[23:16], ipv4_dstip[31:24], tx0_ipv4_srcip[7:0], tx0_ipv4_srcip[15:8], tx0_ipv4_srcip[23:16], tx0_ipv4_srcip[31:24], ip_sum[7:0], ip_sum[15:8]};
-			16'h28: {txc, txd} <= {8'h00, tx0_udp_len[7:0], 4'h0, tx0_udp_len[11:8], 32'h09_00_09_00, ipv4_dstip[7:0], ipv4_dstip[15:8]};
-			16'h30: begin
-				{txc, txd} <= {8'h00, global_counter[23:16], global_counter[31:24], magic_code[7:0], magic_code[15:8], magic_code[23:16], magic_code[31:24], 16'h00_00};
-				tmp_counter[15:0] <= global_counter[15:0];
-			end
-			16'h38: {txc, txd} <= {8'h00, tv_usec[23:16], tv_usec[31:25], tv_sec[7:0],tv_sec[15:8], tv_sec[23:16], tv_sec[31:24], tmp_counter[7:0], tmp_counter[15:8]};
-			16'h40: begin
-				{txc, txd} <= {8'h00, 32'he5_e5_e5_e5, 16'h_00_00, tv_usec[7:0], tv_usec[15:8]};
-				crc_rewrite <= 1'b1;
-			end
-			16'h48: begin
-				{txc, txd} <= {8'hff, 64'h07_07_07_07_07_07_07_fd};
-			end
-			default: begin
-				{txc, txd} <= {8'hff, 64'h07_07_07_07_07_07_07_07};
-			end
+		end
 		endcase
 	end
 end

@@ -62,7 +62,7 @@ always @(posedge clk) begin
 		tx0_fullroute <= 1'b0;
 		tx0_req_arp   <= 1'b0;
 		tx0_frame_len <= 16'd64;
-		tx0_inter_frame_gap <= 32'd12;
+		tx0_inter_frame_gap <= 32'd12500000-32'd72;
 		tx0_src_mac   <= 48'h003776_000100;
 		tx0_ipv4_gwip <= {8'd10,8'd0,8'd20,8'd1};
 		tx0_ipv4_srcip<= {8'd10,8'd0,8'd20,8'd105};

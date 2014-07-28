@@ -57,7 +57,7 @@ measure measure_inst (
 	.tx0_fullroute(1'b0),
 	.tx0_req_arp(1'b0),
 	.tx0_frame_len(16'd68),
-	.tx0_inter_frame_gap(32'd12),
+	.tx0_inter_frame_gap(32'd1),
 	.tx0_ipv4_srcip({8'd192, 8'd168, 8'd1, 8'd101}),
 	.tx0_src_mac(48'h001122_334466),
 	.tx0_ipv4_gwip({8'd192, 8'd168, 8'd1, 8'd1}),
