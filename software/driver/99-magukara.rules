@@ -1,0 +1,1 @@
+KERNEL=="magukara*"		MODE="0666"
