@@ -221,7 +221,7 @@ always @(posedge sys_clk) begin
 					{txc, txd} <= {8'h00, 32'he5_e5_e5_e5, 16'h_00_00, tv_usec[7:0], tv_usec[15:8]};
 					crc_rewrite <= 1'b1;
 				end
-				16'h48: begin
+				default: begin
 					{txc, txd} <= {8'hff, 64'h07_07_07_07_07_07_07_fd};
 					tx_counter <= 32'h0;
 					if (tx0_inter_frame_gap == 32'd0) begin
@@ -230,9 +230,6 @@ always @(posedge sys_clk) begin
 						gap_count <= tx0_inter_frame_gap - 32'd1;
 						tx_state <= TX_GAP;
 					end
-				end
-				default: begin
-					{txc, txd} <= {8'hff, 64'h07_07_07_07_07_07_07_07};
 				end
 			endcase
 		end
