@@ -259,6 +259,9 @@ assign xphy0_prtad = 5'd0;
 assign xphy0_signal_detect = 1'b1;
 assign nw0_reset = nw0_reset_i;
 
+wire [63:0] xgmii0_rxdtmp;
+wire [7:0] xgmii0_rxctmp;
+
 network_path network_path_inst_0 (
 	//XGEMAC PHY IO
 	.txusrclk(txusrclk),
@@ -297,9 +300,17 @@ network_path network_path_inst_0 (
 	.dclk(dclk_i),
 	.xgmii_txd(xgmii0_txd),
 	.xgmii_txc(xgmii0_txc),
-	.xgmii_rxd(xgmii0_rxd),
-	.xgmii_rxc(xgmii0_rxc)
+	.xgmii_rxd(xgmii0_rxdtmp),
+	.xgmii_rxc(xgmii0_rxctmp)
 ); 
+
+xgmii2fifo72 xgmii2_0 (
+	.sys_rst(sys_rst),
+	.xgmii_rx_clk(clk156),
+	.xgmii_rxd({xgmii0_rxctmp,xgmii0_rxdtmp}),
+	.din({xgmii0_rxc,xgmii0_rxd})
+);
+
 
 // ---------------
 // GT1 instance
@@ -544,6 +555,7 @@ wire [31:0] rx3_throughput;
 wire [23:0] rx3_latency;
 wire [31:0] rx3_ipv4_i;
 
+wire [31:0] global_counter;
 
 // ---------------
 // Measure
@@ -587,7 +599,8 @@ measure measure_inst (
 	.tx0_ipv6_srcip(tx0_ipv6_srcip),
 	.tx0_ipv6_dstip(tx0_ipv6_dstip),
 	.tx0_dst_mac(tx0_dst_mac),
-	.tx0_ipv4_dstip(tx0_ipv4_dstip),
+//	.tx0_ipv4_dstip({tx0_ipv4_dstip),
+	.tx0_ipv4_dstip({tx0_ipv4_dstip[31:8],global_counter[7:0]}),
 	.tx0_pps(tx0_pps),
 	.tx0_throughput(tx0_throughput),
 	.tx0_ipv4_ip(tx0_ipv4_ip),
