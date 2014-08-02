@@ -15,7 +15,7 @@ CODE1 SEGMENT PAGE COMMON 'CODE1'
 strROMData CATSTR <'PCIBoard OptionROM'>     ;デバイス固有領域(最大18バイト)
 strROMName CATSTR <'Option ROM Sample Program Image ( for PC/AT ROM )',0> ;PCIボード名/拡張ROMバージョンなど
 pcirVendorID = 3776h
-pcirDeviceID = 8010h
+pcirDeviceID = 8000h
 pcirVPD      = 0000h
 pcirClassBase = 00h
 pcirClassSub  = 00h
@@ -50,9 +50,9 @@ postCode PROC FAR
         MOV     SI,OFFSET TitleMsg
         CALL    dispTTY
 ;
-; 3秒間キー入力待ち
+; n秒間キー入力待ち
 ;
-        MOV     DX,3
+        MOV     DX,6
 wait1s:
         MOV     CX,33333    ;33333*(15*2)us = 1s
 wait15us1:
@@ -922,12 +922,12 @@ clearCursor PROC NEAR
 
 clearCursor ENDP
 
-TitleMsg DB 'IP-NUMA  ROM BIOS Version 0.00',13,10
-         DB 'Copyright 2008-2014, macchan@sfc.wide.ad.jp',13,10,13,10
+TitleMsg DB 'Magukara ROM BIOS Version 0.00',13,10
+         DB 'Copyright 2008-2014, {sora,,macchan}@sfc.wide.ad.jp',13,10,13,10
          DB 'Press any key to continue.',13,10,13,10
          DB '(ALT-Z is start up the menu)',13,10,0
 
-MenuTitleMsg DB 'IP-NUMA  Setup Utility',0
+MenuTitleMsg DB 'Magukara Setup Utility',0
 MenuKeyMsg   DB 18h,19h,':Select Items  Enter:Change Item',0
 
 QuitMsg    DB 'Save Parameters ?(Y/N)',0

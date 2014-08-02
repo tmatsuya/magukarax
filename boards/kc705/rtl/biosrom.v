@@ -5,10 +5,10 @@ module biosrom (
 	output reg [31:0] data
 );
 
-reg [31:0] rom [0:2047];
+reg [31:0] rom [0:511];
 
 initial begin
-	$readmemh("/home/tmatsuya/magukarax/software/biosrom/biosrom.d32", rom, 0, 2047);
+	$readmemh("/home/tmatsuya/magukarax/software/biosrom/biosrom.d32", rom, 0, 511);
 end
 
 always @(posedge clk) begin

@@ -303,7 +303,7 @@ always @(posedge clk) begin
 end
 
 //assign rd_data = read_data;
-assign rd_data = rd_addr[10:0] != 2'b11 ? read_data : bios_data;
+assign rd_data = rd_addr[10:9] == 2'b11 ? bios_data : read_data;
 assign wr_busy = 1'b0;
 
 endmodule
