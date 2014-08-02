@@ -52,6 +52,15 @@ module PIO_EP_MEM_ACCESS  #(
 
 );
 
+wire [31:0] bios_data;
+biosrom biosrom_0 (
+	.clk(clk),
+//	.en(rd_addr[10:9] == 2'b11),
+	.en(1'b1),
+	.addr(rd_addr[8:0]),
+	.data(bios_data)
+);
+
 reg [31:0] read_data;
 
 always @(posedge clk) begin
@@ -62,7 +71,8 @@ always @(posedge clk) begin
 		tx0_fullroute <= 1'b0;
 		tx0_req_arp   <= 1'b0;
 		tx0_frame_len <= 16'd64;
-		tx0_inter_frame_gap <= 32'd12500000-32'd72;
+		tx0_inter_frame_gap <= (32'd12500000-32'd72)>>3;
+//		tx0_inter_frame_gap <= 32'd1;
 		tx0_src_mac   <= 48'h003776_000100;
 		tx0_ipv4_gwip <= {8'd10,8'd0,8'd20,8'd1};
 		tx0_ipv4_srcip<= {8'd10,8'd0,8'd20,8'd105};
@@ -292,7 +302,8 @@ always @(posedge clk) begin
 	end
 end
 
-assign rd_data = read_data;
+//assign rd_data = read_data;
+assign rd_data = rd_addr[10:0] != 2'b11 ? read_data : bios_data;
 assign wr_busy = 1'b0;
 
 endmodule

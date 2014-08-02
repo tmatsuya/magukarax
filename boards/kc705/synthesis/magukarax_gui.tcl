@@ -31,6 +31,7 @@ read_verilog "../rtl/network_path/ten_gig_eth_pcs_pma_ip_GT_Common_wrapper.v"
 read_verilog "../rtl/top.v"
 read_verilog "../rtl/measure.v"
 read_verilog "../rtl/measure_core.v"
+read_verilog "../rtl/xgmii2fifo72.v"
 read_verilog "../../../cores/crc32/rtl/CRC32_D64.v"
 read_verilog "../../../cores/crc32/rtl/CRC32_D32.v"
 read_verilog "../rtl/pcie/support/pcie_7x_0_pipe_clock.v"
@@ -43,6 +44,7 @@ read_verilog "../rtl/pcie/PIO_EP_MEM_ACCESS.v"
 read_verilog "../rtl/pcie/PIO_RX_ENGINE.v"
 read_verilog "../rtl/pcie/PIO_TO_CTRL.v"
 read_verilog "../rtl/pcie/PIO_TX_ENGINE.v"
+read_verilog "../rtl/biosrom.v"
 
 
 # NGC files
