@@ -28,7 +28,7 @@ initCodeLabel CATSTR <postCode>
         ROM_HEADER
 
 MODE   DB      1
-ADR    DW      0010h
+ADR    DW      0012h
 STRS   DB      'IPV4/UDP        '
 
 ;*************************************************************************
@@ -52,7 +52,7 @@ postCode PROC FAR
 ;
 ; nïbä‘ÉLÅ[ì¸óÕë“Çø
 ;
-        MOV     DX,6
+        MOV     DX,8
 wait1s:
         MOV     CX,33333    ;33333*(15*2)us = 1s
 wait15us1:
@@ -922,12 +922,12 @@ clearCursor PROC NEAR
 
 clearCursor ENDP
 
-TitleMsg DB 'Magukara ROM BIOS Version 0.00',13,10
-         DB 'Copyright 2008-2014, {sora,,macchan}@sfc.wide.ad.jp',13,10,13,10
+TitleMsg DB 'Magukara Utility Version 0.00',13,10
+         DB 'Copyright 2012-2014, {sora,macchan}@sfc.wide.ad.jp',13,10,13,10
          DB 'Press any key to continue.',13,10,13,10
          DB '(ALT-Z is start up the menu)',13,10,0
 
-MenuTitleMsg DB 'Magukara Setup Utility',0
+MenuTitleMsg DB 'Magukara Utility',0
 MenuKeyMsg   DB 18h,19h,':Select Items  Enter:Change Item',0
 
 QuitMsg    DB 'Save Parameters ?(Y/N)',0
@@ -948,9 +948,9 @@ ItemTable LABEL ItemInfo
 MAX_ITEM_NUM EQU ($-ItemTable) / (SIZE ItemInfo)
           DW 0
 
-ModeMsg   DB 'Sync Type',0,'                            [1:BUS Mirror 2:DSM 3:BUS+DSM 4:OTHER]',0
-AdrsMsg   DB 'BUS Utilization(%)',0,'                   [0000..00100  Default:0010 ]',0
-StrMsg    DB "Protocol",0,'                             [Max 16 Characters]',0
+ModeMsg   DB 'Packet Size',0,'                      [1:64 2:128 3:256 4:512 5:1024 6:1280 7:1518]',0
+AdrsMsg   DB 'Inter Frame Gap',0,'                  [0001..9999  Default:0012]',0
+StrMsg    DB "Protocol",0,'                                            ',0
 ExitMsg   DB 'Exit',0,0
 
 cursorShape DW ?
