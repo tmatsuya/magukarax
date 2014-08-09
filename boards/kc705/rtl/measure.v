@@ -186,6 +186,11 @@ always @(posedge sys_clk) begin
 		txd <= 64'h0707070707070707;
 		txc <= 8'hff;
   		tx0_dst_mac <= 48'hffffffffffff;
+		pps            <= 32'h0;
+		throughput     <= 32'h0;
+		tx0_pps        <= 32'h0;
+		tx0_throughput <= 32'h0;
+		full_ipv4 <= 24'h0;
 		tx_state <= TX_V4_SEND;
 	end else begin
 		crc_rewrite <= 1'b0;
@@ -194,11 +199,19 @@ always @(posedge sys_clk) begin
 			txd2 <= txd;
 		else
 			txd2 <= {crc32_outrev[7:0], crc32_outrev[15:8], crc32_outrev[23:16], crc32_outrev[31:24], txd[31:0]};
+		if (sec_oneshot == 1'b1) begin
+			tx0_pps        <= pps;
+			tx0_throughput <= throughput;
+			pps            <= 32'h0;
+			throughput     <= 32'h0;
+		end
 		case (tx_state)
 		TX_V4_SEND: begin
 			tx_counter <= tx_counter + 32'h8;
 			case (tx_counter[15:0] )
 				16'h00: begin
+					if (sec_oneshot == 1'b0)
+						pps <= pps + 32'h1;
 					{txc, txd} <= {8'h01, 64'hd5_55_55_55_55_55_55_fb};
 					ip_sum <= 16'h4500 + {4'h0,tx0_ip_len[11:0]} + ipv4_id[15:0] + {ipv4_ttl[7:0],8'h11} + tx0_ipv4_srcip[31:16] + tx0_ipv4_srcip[15:0] + ipv4_dstip[31:16] + ipv4_dstip[15:0];
 					crc_init <= 1'b1;
@@ -225,6 +238,9 @@ always @(posedge sys_clk) begin
 					{txc, txd} <= {8'hff, 64'h07_07_07_07_07_07_07_fd};
 					tx_counter <= 32'h0;
 					if (tx0_inter_frame_gap == 32'd0) begin
+						if (sec_oneshot == 1'b0)
+							throughput <= throughput + {32'd64};
+						full_ipv4 <= full_ipv4 + 24'h1;
 						tx_state <= TX_V4_SEND;
 					end else begin
 						gap_count <= tx0_inter_frame_gap - 32'd1;
@@ -237,6 +253,9 @@ always @(posedge sys_clk) begin
 			{txc, txd} <= {8'hff, 64'h07_07_07_07_07_07_07_07};
 			gap_count <= gap_count - 32'd1;
 			if (gap_count == 32'd0) begin
+				if (sec_oneshot == 1'b0)
+					throughput <= throughput + {32'd64};
+				full_ipv4 <= full_ipv4 + 24'h1;
 				tx_state <= TX_V4_SEND;
 			end
 		end
@@ -274,6 +293,8 @@ measure_core # (
 	.rx_ipv4_ip(rx1_ipv4_ip),
 	.tx_ipv6(tx_ipv6)
 );
+
+assign tx0_ipv4_ip  = ipv4_dstip;
 
 `ifdef DEBUG
 assign xgmii_1_txd = txd2;
