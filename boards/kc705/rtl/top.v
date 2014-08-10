@@ -34,6 +34,8 @@ module top # (
 	input xphy3_rxn,
 `endif
 `ifdef ENABLE_XGMII4
+	input xphy4_refclk_p, 
+	input xphy4_refclk_n, 
 	output xphy4_txp, 
 	output xphy4_txn, 
 	input xphy4_rxp, 

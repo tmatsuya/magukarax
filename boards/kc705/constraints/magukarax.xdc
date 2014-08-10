@@ -5,10 +5,12 @@
 ##---------------------------------------------------------------------------------------
 ## 10GBASE-R constraints
 ##---------------------------------------------------------------------------------------
-##GT Ref clk (FM-S14 312.5MHz FMC_HPC_GBTCLK0_M2C_{P,N}
+##GT Ref clk (FM-S14 312.5MHz FMC_HPC_GBTCLK0_M2C_{P,N})
 set_property PACKAGE_PIN C8 [get_ports xphy0_refclk_p]
 set_property PACKAGE_PIN C7 [get_ports xphy0_refclk_n]
-##GT Ref clk (FM-S14 312.5MHz FMC_HPC_GBTCLK0_M2C_{P,N}
+##GT Ref clk (SI5326 SI5326_OUT_C_{P,N}, MGTREFCLK0{P,N})
+set_property PACKAGE_PIN L8 [get_ports xphy4_refclk_p]
+set_property PACKAGE_PIN L7 [get_ports xphy4_refclk_n]
 
 ### Comment the following lines for different quad instance
 ###---------- Set placement for gt0_gtx_wrapper_i/GTX_DUAL ------
