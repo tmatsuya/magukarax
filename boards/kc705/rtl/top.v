@@ -9,8 +9,10 @@ module top # (
 	parameter C_DATA_WIDTH        = 64, // RX/TX interface data width
 	parameter KEEP_WIDTH          = C_DATA_WIDTH / 8 // TSTRB width
 ) (
+`ifdef ENABLE_XGMII01
 	input xphy0_refclk_p, 
 	input xphy0_refclk_n, 
+`endif
 	output [4:0] sfp_tx_disable, 
 	output [3:0] sfp_tx_fault, 
 `ifdef ENABLE_XGMII01
@@ -294,6 +296,7 @@ wire [63:0]	gt4_rxd;
 wire [7:0]	gt4_rxc;
 wire [2:0]	gt4_loopback;
 
+`ifdef ENABLE_XGMII01
 // ---------------
 // GT0 instance
 // ---------------
@@ -404,6 +407,7 @@ network_path network_path_inst_1 (
 	.xgmii_rxd(xgmii1_rxd),
 	.xgmii_rxc(xgmii1_rxc)
 ); 
+`endif
 
 `ifdef ENABLE_XGMII23
 // ---------------
@@ -520,7 +524,7 @@ network_path network_path_inst_4 (
 	//XGEMAC PHY IO
 	.txusrclk(txusrclk),
 	.txusrclk2(txusrclk2),
-	.txclk322(),
+	.txclk322(txclk322),
 	.areset_refclk_bufh(areset_refclk_bufh),
 	.areset_clk156(areset_clk156),
 	.mmcm_locked_clk156(mmcm_locked_clk156),
@@ -562,8 +566,13 @@ network_path network_path_inst_4 (
 `ifdef USE_DIFF_QUAD
 xgbaser_gt_diff_quad_wrapper xgbaser_gt_wrapper_inst_0 (
 	.areset(sys_rst),
+`ifdef ENABLE_XGMII4
+	.refclk_p(xphy4_refclk_p),
+	.refclk_n(xphy4_refclk_n),
+`else
 	.refclk_p(xphy0_refclk_p),
 	.refclk_n(xphy0_refclk_n),
+`endif
 	.txclk322(txclk322),
 	.gt0_tx_resetdone(xphy0_tx_resetdone),
 	.gt1_tx_resetdone(xphy1_tx_resetdone),
@@ -590,8 +599,13 @@ xgbaser_gt_diff_quad_wrapper xgbaser_gt_wrapper_inst_0 (
 `else
 xgbaser_gt_same_quad_wrapper xgbaser_gt_wrapper_inst_0 (
 	.areset(sys_rst),
+`ifdef ENABLE_XGMII4
+	.refclk_p(xphy4_refclk_p),
+	.refclk_n(xphy4_refclk_n),
+`else
 	.refclk_p(xphy0_refclk_p),
 	.refclk_n(xphy0_refclk_n),
+`endif
 	.txclk322(txclk322),
 	.gt0_tx_resetdone(xphy0_tx_resetdone),
 	.gt1_tx_resetdone(xphy1_tx_resetdone),
