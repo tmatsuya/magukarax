@@ -13,6 +13,7 @@ module top # (
 	input xphy0_refclk_n, 
 	output [4:0] sfp_tx_disable, 
 	output [3:0] sfp_tx_fault, 
+`ifdef ENABLE_XGMII01
 	output xphy0_txp, 
 	output xphy0_txn, 
 	input xphy0_rxp, 
@@ -21,6 +22,7 @@ module top # (
 	output xphy1_txn, 
 	input xphy1_rxp, 
 	input xphy1_rxn,
+`endif
 `ifdef ENABLE_XGMII23
 	output xphy2_txp, 
 	output xphy2_txn, 
@@ -30,6 +32,12 @@ module top # (
 	output xphy3_txn, 
 	input xphy3_rxp, 
 	input xphy3_rxn,
+`endif
+`ifdef ENABLE_XGMII4
+	output xphy4_txp, 
+	output xphy4_txn, 
+	input xphy4_rxp, 
+	input xphy4_rxn,
 `endif
 `ifdef ENABLE_PCIE
 	// PCI Express
@@ -72,15 +80,15 @@ wire		user_clk;
 wire		user_reset;
 `endif
 
-wire [63:0]	xgmii0_txd, xgmii1_txd, xgmii2_txd, xgmii3_txd;
-wire [7:0]	xgmii0_txc, xgmii1_txc, xgmii2_txc, xgmii3_txc;
-wire [63:0]	xgmii0_rxd, xgmii1_rxd, xgmii2_rxd, xgmii3_rxd;
-wire [7:0]	xgmii0_rxc, xgmii1_rxc, xgmii2_rxc, xgmii3_rxc;
+wire [63:0]	xgmii0_txd, xgmii1_txd, xgmii2_txd, xgmii3_txd, xgmii4_txd;
+wire [7:0]	xgmii0_txc, xgmii1_txc, xgmii2_txc, xgmii3_txc, xgmii4_txc;
+wire [63:0]	xgmii0_rxd, xgmii1_rxd, xgmii2_rxd, xgmii3_rxd, xgmii4_rxd;
+wire [7:0]	xgmii0_rxc, xgmii1_rxc, xgmii2_rxc, xgmii3_rxc, xgmii4_rxc;
   
-wire [7:0]	xphy0_status, xphy1_status, xphy2_status, xphy3_status;
+wire [7:0]	xphy0_status, xphy1_status, xphy2_status, xphy3_status, xphy4_status;
   
 
-wire		nw0_reset, nw1_reset, nw2_reset, nw3_reset;
+wire		nw0_reset, nw1_reset, nw2_reset, nw3_reset, nw4_reset;
 wire		txusrclk;
 wire		txusrclk2;
 wire		txclk322;
@@ -99,8 +107,8 @@ wire		qplloutclk2;
 wire		qplloutrefclk1;
 wire		qplloutrefclk2;
 wire		reset_counter_done; 
-wire		nw0_reset_i, nw1_reset_i, nw2_reset_i, nw3_reset_i;
-wire		xphy0_tx_resetdone, xphy1_tx_resetdone, xphy2_tx_resetdone, xphy3_tx_resetdone;
+wire		nw0_reset_i, nw1_reset_i, nw2_reset_i, nw3_reset_i, nw4_reset_i;
+wire		xphy0_tx_resetdone, xphy1_tx_resetdone, xphy2_tx_resetdone, xphy3_tx_resetdone, xphy4_tx_resetdone;
 
 
   
@@ -113,6 +121,8 @@ wire [4:0]	xphy2_prtad;
 wire		xphy2_signal_detect;
 wire [4:0]	xphy3_prtad;
 wire		xphy3_signal_detect;
+wire [4:0]	xphy4_prtad;
+wire		xphy4_signal_detect;
   
 
 wire		xphyrefclk_i;    
@@ -186,6 +196,22 @@ wire [2:0]	gt3_loopback_i;
 wire		gt3_txclk322_i;             
 wire		gt3_rxclk322_i;             
 
+wire		gt4_pma_resetout_i;
+wire		gt4_pcs_resetout_i;         
+wire		gt4_drpen_i;                
+wire		gt4_drpwe_i;                
+wire [15:0]	gt4_drpaddr_i;              
+wire [15:0]	gt4_drpdi_i;                
+wire [15:0]	gt4_drpdo_i;                
+wire		gt4_drprdy_i;               
+wire		gt4_resetdone_i;            
+wire [31:0]	gt4_txd_i;                  
+wire [7:0]	gt4_txc_i;                  
+wire [31:0]	gt4_rxd_i;                  
+wire [7:0]	gt4_rxc_i;                  
+wire [2:0]	gt4_loopback_i;             
+wire		gt4_txclk322_i;             
+wire		gt4_rxclk322_i;             
   
 // ---------------
 // Clock and Reset
@@ -250,6 +276,21 @@ wire [7:0]	gt3_txc;
 wire [63:0]	gt3_rxd;
 wire [7:0]	gt3_rxc;
 wire [2:0]	gt3_loopback;
+
+wire		gt4_pma_resetout;
+wire		gt4_pcs_resetout;
+wire		gt4_drpen;
+wire		gt4_drpwe;
+wire [15:0]	gt4_drpaddr;
+wire [15:0]	gt4_drpdi;
+wire [15:0]	gt4_drpdo;
+wire		gt4_drprdy;
+wire		gt4_resetdone;
+wire [63:0]	gt4_txd;
+wire [7:0]	gt4_txc;
+wire [63:0]	gt4_rxd;
+wire [7:0]	gt4_rxc;
+wire [2:0]	gt4_loopback;
 
 // ---------------
 // GT0 instance
@@ -464,6 +505,57 @@ network_path network_path_inst_3 (
 ); 
 `endif    //ENABLE_XGMII23
 
+`ifdef ENABLE_XGMII4
+// ---------------
+// GT4 instance
+// ---------------
+
+assign xphy4_prtad  = 5'd4;
+assign xphy4_signal_detect = 1'b1;
+assign nw4_reset = nw4_reset_i;
+ 
+network_path network_path_inst_4 (
+	//XGEMAC PHY IO
+	.txusrclk(txusrclk),
+	.txusrclk2(txusrclk2),
+	.txclk322(),
+	.areset_refclk_bufh(areset_refclk_bufh),
+	.areset_clk156(areset_clk156),
+	.mmcm_locked_clk156(mmcm_locked_clk156),
+	.gttxreset_txusrclk2(gttxreset_txusrclk2),
+	.gttxreset(gttxreset),
+	.gtrxreset(gtrxreset),
+	.txuserrdy(txuserrdy),
+	.qplllock(qplllock),
+`ifdef USE_DIFF_QUAD
+	.qplloutclk(qplloutclk2),
+	.qplloutrefclk(qplloutrefclk2),
+`else
+	.qplloutclk(qplloutclk),
+	.qplloutrefclk(qplloutrefclk),
+`endif
+	.reset_counter_done(reset_counter_done), 
+	.txp(xphy4_txp),
+	.txn(xphy4_txn),
+	.rxp(xphy4_rxp),
+	.rxn(xphy4_rxn),
+	.tx_resetdone(xphy4_tx_resetdone),
+    
+	.signal_detect(xphy4_signal_detect),
+	.tx_fault(sfp_tx_fault[3]),
+	.prtad(xphy4_prtad),
+	.xphy_status(xphy4_status),
+	.clk156(clk156),
+	.soft_reset(~axi_str_c2s1_aresetn),
+	.sys_rst((sys_rst & ~mmcm_locked_clk156)),
+	.nw_rst_out(nw4_reset_i),   
+	.dclk(dclk_i), 
+	.xgmii_txd(xgmii4_txd),
+	.xgmii_txc(xgmii4_txc),
+	.xgmii_rxd(xgmii4_rxd),
+	.xgmii_rxc(xgmii4_rxc)
+); 
+`endif    //ENABLE_XGMII4
 
 `ifdef USE_DIFF_QUAD
 xgbaser_gt_diff_quad_wrapper xgbaser_gt_wrapper_inst_0 (
