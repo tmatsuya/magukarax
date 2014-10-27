@@ -150,6 +150,7 @@ ten_gig_eth_pcs_pma_ip  ten_gig_eth_pcs_pma_inst (
      //.gttxreset_txusrclk2(gttxreset_txusrclk2),
      .gttxreset(gttxreset),
      .gtrxreset(gtrxreset),
+     .sim_speedup_control(1'b0), //macchan
      .txuserrdy(txuserrdy),
      .qplllock(qplllock),
      .qplloutclk(qplloutclk),
