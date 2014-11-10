@@ -78,8 +78,8 @@ end
 endtask
 
 always @(posedge sys_clk) begin
-	if (xgmii_0_txc != 8'hff)
-		$display("%x", xgmii_0_txd);
+//	if (xgmii_0_txc != 8'hff)
+		$display("%02x %016x", xgmii_0_txc, xgmii_0_txd);
 end
 
 reg [23:0] tlp_rom [0:4095];
