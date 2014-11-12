@@ -350,12 +350,15 @@ network_path network_path_inst_0 (
 	.xgmii_rxc(xgmii0_rxctmp)
 ); 
 
-xgmii2fifo72 xgmii2_0 (
+xgmiisync xgmiisync_0 (
 	.sys_rst(sys_rst),
 	.xgmii_rx_clk(clk156),
-	.xgmii_rxd({xgmii0_rxctmp,xgmii0_rxdtmp}),
-	.din({xgmii0_rxc,xgmii0_rxd})
+	.xgmii_rxd_i(xgmii0_rxdtmp),
+	.xgmii_rxc_i(xgmii0_rxctmp),
+	.xgmii_rxd_o(xgmii0_rxd),
+	.xgmii_rxc_o(xgmii0_rxc)
 );
+
 
 
 // ---------------
