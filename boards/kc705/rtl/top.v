@@ -369,6 +369,9 @@ assign xphy1_prtad  = 5'd1;
 assign xphy1_signal_detect = 1'b1;
 assign nw1_reset = nw1_reset_i;
  
+wire [63:0] xgmii1_rxdtmp;
+wire [7:0] xgmii1_rxctmp;
+
 network_path network_path_inst_1 (
 	//XGEMAC PHY IO
 	.txusrclk(txusrclk),
@@ -407,10 +410,19 @@ network_path network_path_inst_1 (
 	.dclk(dclk_i), 
 	.xgmii_txd(xgmii1_txd),
 	.xgmii_txc(xgmii1_txc),
-	.xgmii_rxd(xgmii1_rxd),
-	.xgmii_rxc(xgmii1_rxc)
+	.xgmii_rxd(xgmii1_rxdtmp),
+	.xgmii_rxc(xgmii1_rxctmp)
 ); 
 `endif
+
+xgmiisync xgmiisync_1 (
+	.sys_rst(sys_rst),
+	.xgmii_rx_clk(clk156),
+	.xgmii_rxd_i(xgmii1_rxdtmp),
+	.xgmii_rxc_i(xgmii1_rxctmp),
+	.xgmii_rxd_o(xgmii1_rxd),
+	.xgmii_rxc_o(xgmii1_rxc)
+);
 
 `ifdef ENABLE_XGMII23
 // ---------------
@@ -421,6 +433,9 @@ assign xphy2_prtad  = 5'd2;
 assign xphy2_signal_detect = 1'b1;
 assign nw2_reset = nw2_reset_i;
  
+wire [63:0] xgmii2_rxdtmp;
+wire [7:0] xgmii2_rxctmp;
+
 network_path network_path_inst_2 (
 	//XGEMAC PHY IO
 	.txusrclk(txusrclk),
@@ -459,9 +474,18 @@ network_path network_path_inst_2 (
 	.dclk(dclk_i), 
 	.xgmii_txd(xgmii2_txd),
 	.xgmii_txc(xgmii2_txc),
-	.xgmii_rxd(xgmii2_rxd),
-	.xgmii_rxc(xgmii2_rxc)
+	.xgmii_rxd(xgmii2_rxdtmp),
+	.xgmii_rxc(xgmii2_rxctmp)
 ); 
+
+xgmiisync xgmiisync_2 (
+	.sys_rst(sys_rst),
+	.xgmii_rx_clk(clk156),
+	.xgmii_rxd_i(xgmii2_rxdtmp),
+	.xgmii_rxc_i(xgmii2_rxctmp),
+	.xgmii_rxd_o(xgmii2_rxd),
+	.xgmii_rxc_o(xgmii2_rxc)
+);
 
 // ---------------
 // GT3 instance
@@ -471,6 +495,9 @@ assign xphy3_prtad  = 5'd3;
 assign xphy3_signal_detect = 1'b1;
 assign nw3_reset = nw3_reset_i;
  
+wire [63:0] xgmii3_rxdtmp;
+wire [7:0] xgmii3_rxctmp;
+
 network_path network_path_inst_3 (
 	//XGEMAC PHY IO
 	.txusrclk(txusrclk),
@@ -509,9 +536,19 @@ network_path network_path_inst_3 (
 	.dclk(dclk_i), 
 	.xgmii_txd(xgmii3_txd),
 	.xgmii_txc(xgmii3_txc),
-	.xgmii_rxd(xgmii3_rxd),
-	.xgmii_rxc(xgmii3_rxc)
+	.xgmii_rxd(xgmii3_rxdtmp),
+	.xgmii_rxc(xgmii3_rxctmp)
 ); 
+
+xgmiisync xgmiisync_3 (
+	.sys_rst(sys_rst),
+	.xgmii_rx_clk(clk156),
+	.xgmii_rxd_i(xgmii3_rxdtmp),
+	.xgmii_rxc_i(xgmii3_rxctmp),
+	.xgmii_rxd_o(xgmii3_rxd),
+	.xgmii_rxc_o(xgmii3_rxc)
+);
+
 `endif    //ENABLE_XGMII23
 
 `ifdef ENABLE_XGMII4
@@ -523,6 +560,9 @@ assign xphy4_prtad  = 5'd4;
 assign xphy4_signal_detect = 1'b1;
 assign nw4_reset = nw4_reset_i;
  
+wire [63:0] xgmii4_rxdtmp;
+wire [7:0] xgmii4_rxctmp;
+
 network_path network_path_inst_4 (
 	//XGEMAC PHY IO
 	.txusrclk(txusrclk),
@@ -561,9 +601,18 @@ network_path network_path_inst_4 (
 	.dclk(dclk_i), 
 	.xgmii_txd(xgmii4_txd),
 	.xgmii_txc(xgmii4_txc),
-	.xgmii_rxd(xgmii4_rxd),
-	.xgmii_rxc(xgmii4_rxc)
+	.xgmii_rxd(xgmii4_rxdtmp),
+	.xgmii_rxc(xgmii4_rxctmp)
 ); 
+
+xgmiisync xgmiisync_4 (
+	.sys_rst(sys_rst),
+	.xgmii_rx_clk(clk156),
+	.xgmii_rxd_i(xgmii4_rxdtmp),
+	.xgmii_rxc_i(xgmii4_rxctmp),
+	.xgmii_rxd_o(xgmii4_rxd),
+	.xgmii_rxc_o(xgmii4_rxc)
+);
 `endif    //ENABLE_XGMII4
 
 `ifdef USE_DIFF_QUAD
@@ -653,6 +702,10 @@ wire [127:0] tx0_ipv6_dstip;
 wire [31:0] tx0_pps;
 wire [31:0] tx0_throughput;
 wire [31:0] tx0_ipv4_ip;
+wire [31:0] rx0_pps;
+wire [31:0] rx0_throughput;
+wire [23:0] rx0_latency;
+wire [31:0] rx0_ipv4_ip;
 wire [31:0] rx1_pps;
 wire [31:0] rx1_throughput;
 wire [23:0] rx1_latency;
@@ -714,6 +767,11 @@ measure measure_inst (
 	.tx0_pps(tx0_pps),
 	.tx0_throughput(tx0_throughput),
 	.tx0_ipv4_ip(tx0_ipv4_ip),
+
+	.rx0_pps(rx0_pps),
+	.rx0_throughput(rx0_throughput),
+	.rx0_latency(rx0_latency),
+	.rx0_ipv4_ip(rx0_ipv4_ip),
 
 	.rx1_pps(rx1_pps),
 	.rx1_throughput(rx1_throughput),
@@ -1260,6 +1318,10 @@ pcie_app_7x  #(
 	.tx0_pps(tx0_pps),
 	.tx0_throughput(tx0_throughput),
 	.tx0_ipv4_ip(tx0_ipv4_ip),
+	.rx0_pps(rx0_pps),
+	.rx0_throughput(rx0_throughput),
+	.rx0_latency(rx0_latency),
+	.rx0_ipv4_ip(rx0_ipv4_ip),
 	.rx1_pps(rx1_pps),
 	.rx1_throughput(rx1_throughput),
 	.rx1_latency(rx1_latency),

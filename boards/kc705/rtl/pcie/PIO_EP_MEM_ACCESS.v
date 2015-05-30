@@ -37,6 +37,10 @@ module PIO_EP_MEM_ACCESS  #(
 	input [31:0]  tx0_pps,
 	input [31:0]  tx0_throughput,
 	input [31:0]  tx0_ipv4_ip,
+	input [31:0]  rx0_pps,
+	input [31:0]  rx0_throughput,
+	input [23:0]  rx0_latency,
+	input [31:0]  rx0_ipv4_ip,
 	input [31:0]  rx1_pps,
 	input [31:0]  rx1_throughput,
 	input [23:0]  rx1_latency,
@@ -107,40 +111,48 @@ always @(posedge clk) begin
 				read_data[31:0] <= {tx0_throughput[31:0]};
 			6'h13: // tx0_ipv4_ip
 				read_data[31:0] <= {tx0_ipv4_ip[31:0]};
-			6'h14: // rx1 pps
-				read_data[31:0] <= {rx1_pps[31:0]};
-			6'h15: // rx1 throughput
-				read_data[31:0] <= {rx1_throughput[31:0]};
-			6'h16: // rx1_latency
-				read_data[31:0] <= {8'h0, rx1_latency[23:0]};
-			6'h17: // rx1_ipv4_ip
-				read_data[31:0] <= {rx1_ipv4_ip[31:0]};
-			6'h18: // rx2 pps
-				read_data[31:0] <= {rx2_pps[31:0]};
-			6'h19: // rx2 throughput
-				read_data[31:0] <= {rx2_throughput[31:0]};
-			6'h1a: // rx2_latency
-				read_data[31:0] <= {8'h0, rx2_latency[23:0]};
-			6'h1b: // rx2_ipv4_ip
-				read_data[31:0] <= {rx2_ipv4_ip[31:0]};
-			6'h1c: // rx3 pps
-				read_data[31:0] <= {rx3_pps[31:0]};
-			6'h1d: // rx3 throughput
-				read_data[31:0] <= {rx3_throughput[31:0]};
-			6'h1e: // rx3_latency
-				read_data[31:0] <= {8'h0, rx3_latency[23:0]};
-			6'h1f: // rx3_ipv4_ip
-				read_data[31:0] <= {rx3_ipv4_ip[31:0]};
-			6'h20: // tx0_ipv6_srcip
+			6'h18: // tx0_ipv6_srcip
 				read_data[31:0] <= {tx0_ipv6_srcip[127:96]};
-			6'h21:  read_data[31:0] <= {tx0_ipv6_srcip[95:64]};
-			6'h22:  read_data[31:0] <= {tx0_ipv6_srcip[63:32]};
-			6'h23:  read_data[31:0] <= {tx0_ipv6_srcip[31: 0]};
-			6'h24: // tx0_ipv6_dstip
+			6'h19:  read_data[31:0] <= {tx0_ipv6_srcip[95:64]};
+			6'h1a:  read_data[31:0] <= {tx0_ipv6_srcip[63:32]};
+			6'h1b:  read_data[31:0] <= {tx0_ipv6_srcip[31: 0]};
+			6'h1c: // tx0_ipv6_dstip
 				read_data[31:0] <= {tx0_ipv6_dstip[127:96]};
-			6'h25:  read_data[31:0] <= {tx0_ipv6_dstip[95:64]};
-			6'h26:  read_data[31:0] <= {tx0_ipv6_dstip[63:32]};
-			6'h27:  read_data[31:0] <= {tx0_ipv6_dstip[31: 0]};
+			6'h1d:  read_data[31:0] <= {tx0_ipv6_dstip[95:64]};
+			6'h1e:  read_data[31:0] <= {tx0_ipv6_dstip[63:32]};
+			6'h1f:  read_data[31:0] <= {tx0_ipv6_dstip[31: 0]};
+			6'h20: // rx0 pps
+				read_data[31:0] <= {rx0_pps[31:0]};
+			6'h21: // rx0 throughput
+				read_data[31:0] <= {rx0_throughput[31:0]};
+			6'h22: // rx0_latency
+				read_data[31:0] <= {8'h0, rx0_latency[23:0]};
+			6'h23: // rx0_ipv4_ip
+				read_data[31:0] <= {rx0_ipv4_ip[31:0]};
+			6'h24: // rx1 pps
+				read_data[31:0] <= {rx1_pps[31:0]};
+			6'h25: // rx1 throughput
+				read_data[31:0] <= {rx1_throughput[31:0]};
+			6'h26: // rx1_latency
+				read_data[31:0] <= {8'h0, rx1_latency[23:0]};
+			6'h27: // rx1_ipv4_ip
+				read_data[31:0] <= {rx1_ipv4_ip[31:0]};
+			6'h28: // rx2 pps
+				read_data[31:0] <= {rx2_pps[31:0]};
+			6'h29: // rx2 throughput
+				read_data[31:0] <= {rx2_throughput[31:0]};
+			6'h2a: // rx2_latency
+				read_data[31:0] <= {8'h0, rx2_latency[23:0]};
+			6'h2b: // rx2_ipv4_ip
+				read_data[31:0] <= {rx2_ipv4_ip[31:0]};
+			6'h2c: // rx3 pps
+				read_data[31:0] <= {rx3_pps[31:0]};
+			6'h2d: // rx3 throughput
+				read_data[31:0] <= {rx3_throughput[31:0]};
+			6'h2e: // rx3_latency
+				read_data[31:0] <= {8'h0, rx3_latency[23:0]};
+			6'h2f: // rx3_ipv4_ip
+				read_data[31:0] <= {rx3_ipv4_ip[31:0]};
 			default: read_data[31:0] <= 32'h0;
 		endcase
 		if (wr_en == 1'b1) begin
@@ -217,7 +229,7 @@ always @(posedge clk) begin
 					if (wr_be[3])
 						tx0_ipv4_dstip[ 7: 0] <= wr_data[7:0];
 				end
-				6'h20: begin // tx0_ipv6_srcip
+				6'h18: begin // tx0_ipv6_srcip
 					if (wr_be[0])
 						tx0_ipv6_srcip[127:120] <= wr_data[31:24];
 					if (wr_be[1])
@@ -227,7 +239,7 @@ always @(posedge clk) begin
 					if (wr_be[3])
 						tx0_ipv6_srcip[103: 96] <= wr_data[7:0];
 				end
-				6'h21: begin
+				6'h19: begin
 					if (wr_be[0])
 						tx0_ipv6_srcip[95:88] <= wr_data[31:24];
 					if (wr_be[1])
@@ -237,7 +249,7 @@ always @(posedge clk) begin
 					if (wr_be[3])
 						tx0_ipv6_srcip[71:64] <= wr_data[7:0];
 				end
-				6'h22: begin
+				6'h1a: begin
 					if (wr_be[0])
 						tx0_ipv6_srcip[63:56] <= wr_data[31:24];
 					if (wr_be[1])
@@ -247,7 +259,7 @@ always @(posedge clk) begin
 					if (wr_be[3])
 						tx0_ipv6_srcip[39:32] <= wr_data[7:0];
 				end
-				6'h23: begin
+				6'h1b: begin
 					if (wr_be[0])
 						tx0_ipv6_srcip[31:24] <= wr_data[31:24];
 					if (wr_be[1])
@@ -257,7 +269,7 @@ always @(posedge clk) begin
 					if (wr_be[3])
 						tx0_ipv6_srcip[ 7: 0] <= wr_data[7:0];
 				end
-				6'h24: begin // tx0_ipv6_dstip
+				6'h1c: begin // tx0_ipv6_dstip
 					if (wr_be[0])
 						tx0_ipv6_dstip[127:120] <= wr_data[31:24];
 					if (wr_be[1])
@@ -267,7 +279,7 @@ always @(posedge clk) begin
 					if (wr_be[3])
 						tx0_ipv6_dstip[103: 96] <= wr_data[7:0];
 				end
-				6'h25: begin
+				6'h1d: begin
 					if (wr_be[0])
 						tx0_ipv6_dstip[95:88] <= wr_data[31:24];
 					if (wr_be[1])
@@ -277,7 +289,7 @@ always @(posedge clk) begin
 					if (wr_be[3])
 						tx0_ipv6_dstip[71:64] <= wr_data[7:0];
 				end
-				6'h26: begin
+				6'h1e: begin
 					if (wr_be[0])
 						tx0_ipv6_dstip[63:56] <= wr_data[31:24];
 					if (wr_be[1])
@@ -287,7 +299,7 @@ always @(posedge clk) begin
 					if (wr_be[3])
 						tx0_ipv6_dstip[39:32] <= wr_data[7:0];
 				end
-				6'h27: begin
+				6'h1f: begin
 					if (wr_be[0])
 						tx0_ipv6_dstip[31:24] <= wr_data[31:24];
 					if (wr_be[1])

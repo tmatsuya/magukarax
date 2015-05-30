@@ -48,6 +48,11 @@ module measure (
 	output reg [31:0] tx0_throughput,
 	output [31:0] tx0_ipv4_ip,
 
+	output [31:0] rx0_pps,
+	output [31:0] rx0_throughput,
+	output [23:0] rx0_latency,
+	output [31:0] rx0_ipv4_ip,
+
 	output [31:0] rx1_pps,
 	output [31:0] rx1_throughput,
 	output [23:0] rx1_latency,
@@ -269,6 +274,34 @@ assign xgmii_0_txd = txd2;
 assign xgmii_0_txc = txc2;
 
 //-----------------------------------
+// RX#0 Recive port logic
+//-----------------------------------
+measure_core # (
+	.Int_ipv4_addr({8'd10, 8'd0, 8'd20, 8'd105}),
+	.Int_ipv6_addr(128'h3776_0000_0000_0020_0000_0000_0000_0105),
+	.Int_mac_addr(48'h003776_000100)
+) measure_phy0 (
+	.sys_rst(sys_rst),
+	.sys_clk(sys_clk),
+	.pci_clk(pci_clk),
+	.sec_oneshot(sec_oneshot),
+	.global_counter(global_counter),
+
+`ifdef NO
+	.xgmii_txd(xgmii_0_txd),
+	.xgmii_txc(xgmii_0_txc),
+`endif
+	.xgmii_rxd(xgmii_0_rxd),
+	.xgmii_rxc(xgmii_0_rxc),
+
+	.rx_pps(rx0_pps),
+	.rx_throughput(rx0_throughput),
+	.rx_latency(rx0_latency),
+	.rx_ipv4_ip(rx0_ipv4_ip),
+	.tx_ipv6(tx_ipv6)
+);
+
+//-----------------------------------
 // RX#1 Recive port logic
 //-----------------------------------
 measure_core # (
@@ -282,8 +315,10 @@ measure_core # (
 	.sec_oneshot(sec_oneshot),
 	.global_counter(global_counter),
 
+`ifdef NO
 	.xgmii_txd(xgmii_1_txd),
 	.xgmii_txc(xgmii_1_txc),
+`endif
 	.xgmii_rxd(xgmii_1_rxd),
 	.xgmii_rxc(xgmii_1_rxc),
 
