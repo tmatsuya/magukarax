@@ -331,13 +331,11 @@ measure_core # (
 
 assign tx0_ipv4_ip  = ipv4_dstip;
 
-`ifdef DEBUG
 assign xgmii_1_txd = txd2;
 assign xgmii_1_txc = txc2;
-//`else
 //assign xgmii_1_txd = 64'h07_07_07_07_07_07_07_07;
 //assign xgmii_1_txc = 8'hff;
-`endif
+
 `ifdef ENABLE_XGMII23
 `ifdef DEBUG
 assign xgmii_2_txd = txd2;
