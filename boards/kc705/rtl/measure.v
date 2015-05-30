@@ -356,8 +356,8 @@ measure_core # (
 
 assign tx0_ipv4_ip  = ipv4_dstip;
 
-//macchan assign xgmii_1_txd = txd3;
-//macchan assign xgmii_1_txc = txc3;
+assign xgmii_1_txd = data_shift4 ? {txd3[31:0], txd4[31:0]} : txd3;
+assign xgmii_1_txc = data_shift4 ? {txc3[3:0], txc4[3:0]} : txc3;
 //assign xgmii_1_txd = 64'h07_07_07_07_07_07_07_07;
 //assign xgmii_1_txc = 8'hff;
 
