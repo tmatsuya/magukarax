@@ -95,8 +95,10 @@ end
 // Transmitte logic
 //-----------------------------------
 reg [31:0] tx_counter;
-reg [63:0] txd, txd2;
-reg [7:0] txc, txc2;
+reg [63:0] txd, txd2, txd3;
+reg [7:0] txc, txc2, txc3;
+reg [31:0] txd4;
+reg [3:0] txc4;
 
 //-----------------------------------
 // CRC logic
@@ -170,6 +172,7 @@ wire [15:0] frame_end_count  = tx0_frame_len + 16'h8;
 
 reg [2:0] tx_state;
 reg [31:0] gap_count;
+reg data_shift = 1'b0, data_shift2 = 1'b0, data_shift3, data_shift4;
 parameter TX_REQ_ARP     = 3'h0;  // Send ARP request
 parameter TX_WAIT_ARPREP = 3'h1;  // Wait ARP reply
 parameter TX_V4_SEND     = 3'h2;  // IPv4 Payload
@@ -190,6 +193,14 @@ always @(posedge sys_clk) begin
 		tmp_counter <= 16'h0;
 		txd <= 64'h0707070707070707;
 		txc <= 8'hff;
+		txd2 <= 64'h0707070707070707;
+		txc2 <= 8'hff;
+		txd3 <= 64'h0707070707070707;
+		txc3 <= 8'hff;
+		data_shift <= 1'b0;
+		data_shift2 <= 1'b0;
+		data_shift3 <= 1'b0;
+		data_shift4 <= 1'b0;
   		tx0_dst_mac <= 48'hffffffffffff;
 		pps            <= 32'h0;
 		throughput     <= 32'h0;
@@ -199,11 +210,18 @@ always @(posedge sys_clk) begin
 		tx_state <= TX_V4_SEND;
 	end else begin
 		crc_rewrite <= 1'b0;
+		data_shift2 <= data_shift;
+		data_shift3 <= data_shift2;
+		data_shift4 <= data_shift3;
 		txc2 <= txc;
 		if (crc_rewrite == 1'b0)
 			txd2 <= txd;
 		else
 			txd2 <= {crc32_outrev[7:0], crc32_outrev[15:8], crc32_outrev[23:16], crc32_outrev[31:24], txd[31:0]};
+		txc3 <= txc2;
+		txd3 <= txd2;
+		txc4 <= txc3[7:4];
+		txd4 <= txd3[63:32];
 		if (sec_oneshot == 1'b1) begin
 			tx0_pps        <= pps;
 			tx0_throughput <= throughput;
@@ -245,9 +263,16 @@ always @(posedge sys_clk) begin
 					if (tx0_inter_frame_gap == 32'd0) begin
 						if (sec_oneshot == 1'b0)
 							throughput <= throughput + {32'd64};
-						full_ipv4 <= full_ipv4 + 24'h1;
-						tx_state <= TX_V4_SEND;
+						gap_count[31:0] <= 32'd0;
+						data_shift <= !data_shift;
+						if (data_shift == 1'b0) begin
+							full_ipv4 <= full_ipv4 + 24'h1;
+							tx_state <= TX_V4_SEND;
+						end else begin
+							tx_state <= TX_GAP;
+						end
 					end else begin
+						data_shift <= 1'b0;
 						gap_count <= tx0_inter_frame_gap - 32'd1;
 						tx_state <= TX_GAP;
 					end
@@ -270,8 +295,8 @@ end
 
 assign tv_usec[31:0] = {16'h0000, tmp_counter[15:0]};
 
-assign xgmii_0_txd = txd2;
-assign xgmii_0_txc = txc2;
+assign xgmii_0_txd = data_shift4 ? {txd3[31:0], txd4[31:0]} : txd3;
+assign xgmii_0_txc = data_shift4 ? {txc3[3:0], txc4[3:0]} : txc3;
 
 //-----------------------------------
 // RX#0 Recive port logic
@@ -331,17 +356,17 @@ measure_core # (
 
 assign tx0_ipv4_ip  = ipv4_dstip;
 
-assign xgmii_1_txd = txd2;
-assign xgmii_1_txc = txc2;
+//macchan assign xgmii_1_txd = txd3;
+//macchan assign xgmii_1_txc = txc3;
 //assign xgmii_1_txd = 64'h07_07_07_07_07_07_07_07;
 //assign xgmii_1_txc = 8'hff;
 
 `ifdef ENABLE_XGMII23
 `ifdef DEBUG
-assign xgmii_2_txd = txd2;
-assign xgmii_2_txc = txc2;
-assign xgmii_3_txd = txd2;
-assign xgmii_3_txc = txc2;
+assign xgmii_2_txd = txd3;
+assign xgmii_2_txc = txc3;
+assign xgmii_3_txd = txd3;
+assign xgmii_3_txc = txc3;
 `else
 assign xgmii_2_txd = 64'h07_07_07_07_07_07_07_07;
 assign xgmii_2_txc = 8'hff;
