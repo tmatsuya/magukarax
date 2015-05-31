@@ -129,7 +129,6 @@ txd[60],txd[61],txd[62],txd[63]
 	.crc_out(crc64_out)	// 32bit
 );
 
-`ifdef NO
 crc32_d16 crc32_d16_inst (
 	.data_in({
 txd[00],txd[01],txd[02],txd[03],txd[04],txd[05],txd[06],txd[07],txd[08],txd[09],
@@ -138,7 +137,6 @@ txd[10],txd[11],txd[12],txd[13],txd[14],txd[15]
 	.crc_in(crc64_out),
 	.crc_out(crc16_out)
 );
-`endif
 
 crc32_d32 crc32_d32_inst (
 	.data_in({
@@ -182,6 +180,9 @@ wire [15:0] frame_crc2_count = tx0_frame_len + 16'h5;
 wire [15:0] frame_crc3_count = tx0_frame_len + 16'h6;
 wire [15:0] frame_crc4_count = tx0_frame_len + 16'h7;
 wire [15:0] frame_end_count  = tx0_frame_len + 16'h8;
+
+wire frame_64 = (tx0_frame_len == 16'd64);
+wire frame_1518 = (tx0_frame_len == 16'd1518);
 
 reg [2:0] tx_state;
 reg [31:0] gap_count;
@@ -227,10 +228,14 @@ always @(posedge sys_clk) begin
 		data_shift3 <= data_shift2;
 		data_shift4 <= data_shift3;
 		txc2 <= txc;
-		if (crc_rewrite == 1'b0)
+		if (crc_rewrite == 1'b0) begin
 			txd2 <= txd;
-		else
-			txd2 <= {crc32_outrev[7:0], crc32_outrev[15:8], crc32_outrev[23:16], crc32_outrev[31:24], txd[31:0]};
+		end else begin
+			if (frame_64)
+				txd2 <= {crc32_outrev[7:0], crc32_outrev[15:8], crc32_outrev[23:16], crc32_outrev[31:24], txd[31:0]};
+			else
+				txd2 <= {16'h07_fd, crc16_outrev[7:0], crc16_outrev[15:8], crc16_outrev[23:16], crc16_outrev[31:24], txd[15:0]};
+		end
 		txc3 <= txc2;
 		txd3 <= txd2;
 		txc4 <= txc3[7:4];
@@ -268,26 +273,36 @@ always @(posedge sys_clk) begin
 				16'h38: {txc, txd} <= {8'h00, tv_usec[23:16], tv_usec[31:25], tv_sec[7:0],tv_sec[15:8], tv_sec[23:16], tv_sec[31:24], tmp_counter[7:0], tmp_counter[15:8]};
 				16'h40: begin
 					{txc, txd} <= {8'h00, 32'he5_e5_e5_e5, 16'h_00_00, tv_usec[7:0], tv_usec[15:8]};
-					crc_rewrite <= 1'b1;
+					if (frame_64)
+						crc_rewrite <= 1'b1;
 				end
 				default: begin
-					{txc, txd} <= {8'hff, 64'h07_07_07_07_07_07_07_fd};
-					tx_counter <= 32'h0;
-					if (tx0_inter_frame_gap == 32'd0) begin
-						if (sec_oneshot == 1'b0)
-							throughput <= throughput + {32'd64};
-						gap_count[31:0] <= 32'd0;
-						data_shift <= !data_shift;
-						if (data_shift == 1'b0) begin
-							full_ipv4 <= full_ipv4 + 24'h1;
-							tx_state <= TX_V4_SEND;
+					if (frame_64 || tx_counter[15:0] == 16'd1520) begin
+						if (frame_64) begin
+							{txc, txd} <= {8'hff, 64'h07_07_07_07_07_07_07_fd};
 						end else begin
+							crc_rewrite <= 1'b1;
+							{txc, txd} <= {8'hc0, 64'h07_fd_00_00_00_00_00_00};
+						end
+						tx_counter <= 32'h0;
+						if (tx0_inter_frame_gap == 32'd0) begin
+							if (sec_oneshot == 1'b0)
+								throughput <= throughput + {32'd64};
+							gap_count[31:0] <= 32'd0;
+							data_shift <= !data_shift;
+							if (data_shift == 1'b0) begin
+								full_ipv4 <= full_ipv4 + 24'h1;
+								tx_state <= TX_V4_SEND;
+							end else begin
+								tx_state <= TX_GAP;
+							end
+						end else begin
+							data_shift <= 1'b0;
+							gap_count <= tx0_inter_frame_gap - 32'd1;
 							tx_state <= TX_GAP;
 						end
 					end else begin
-						data_shift <= 1'b0;
-						gap_count <= tx0_inter_frame_gap - 32'd1;
-						tx_state <= TX_GAP;
+						{txc, txd} <= {8'h00, 64'h00_00_00_00_00_00_00_00};
 					end
 				end
 			endcase

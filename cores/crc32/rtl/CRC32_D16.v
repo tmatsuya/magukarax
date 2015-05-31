@@ -14,7 +14,7 @@
 module crc32_d16 (
   input [15:0] data_in,
   input [31:0] crc_in,
-  output [31:0] crc_out,
+  output [31:0] crc_out
 );
 
   wire [31:0] lfsr_q;
