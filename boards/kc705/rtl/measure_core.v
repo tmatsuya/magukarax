@@ -79,14 +79,14 @@ always @(posedge sys_clk) begin
 			throughput <= 32'h0;
 		end
 
-		if (xgmii_rxc[7:0] != 8'hff) begin
-			rx_count <= rx_count + 16'h8;
-			case (rx_count)
-			16'h00: if (xgmii_rxc[0] != 1'b1 || xgmii_rxd[7:0] != 8'hfb)
-					rx_count <= 16'h0;
-			16'h08: begin
+		if (xgmii_rxc[0] && xgmii_rxd[7:0] == 8'hfb) begin
 				if (sec_oneshot == 1'b0)
 					pps <= pps + 32'h1;
+				rx_count <= 16'h8;
+		end else if (xgmii_rxc[7:0] == 8'h00) begin
+			rx_count <= rx_count + 16'h8;
+			case (rx_count)
+			16'h08: begin
 				rx_src_mac[47:40] <= xgmii_rxd[ 7: 0];// Ethernet hdr: Source MAC
 				rx_src_mac[39:32] <= xgmii_rxd[15: 8];
 				rx_src_mac[31:24] <= xgmii_rxd[23:16];
@@ -113,7 +113,6 @@ always @(posedge sys_clk) begin
 				counter_start[31:24] <= xgmii_rxd[55:48];
 				counter_start[23:16] <= xgmii_rxd[63:56];
 			end
-
 			16'h38: begin
 				counter_start[15:8]  <= xgmii_rxd[ 7: 0];
 				counter_start[7:0]   <= xgmii_rxd[16: 8];

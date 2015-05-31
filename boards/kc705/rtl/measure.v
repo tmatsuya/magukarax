@@ -108,7 +108,9 @@ reg crc_rewrite = 1'b0;
 assign crc_data_en = ~crc_init;
 wire [31:0] crc64_out, crc64_outrev;
 wire [31:0] crc32_out, crc32_outrev;
+wire [31:0] crc16_out, crc16_outrev;
 assign crc64_outrev = ~{ crc64_out[24],crc64_out[25],crc64_out[26],crc64_out[27],crc64_out[28],crc64_out[29],crc64_out[30],crc64_out[31], crc64_out[16],crc64_out[17],crc64_out[18],crc64_out[19],crc64_out[20],crc64_out[21],crc64_out[22],crc64_out[23], crc64_out[ 8],crc64_out[ 9],crc64_out[10],crc64_out[11],crc64_out[12],crc64_out[13],crc64_out[14],crc64_out[15], crc64_out[ 0],crc64_out[ 1],crc64_out[ 2],crc64_out[ 3],crc64_out[ 4],crc64_out[ 5],crc64_out[ 6],crc64_out[ 7] };
+assign crc16_outrev = ~{ crc16_out[24],crc16_out[25],crc16_out[26],crc16_out[27],crc16_out[28],crc16_out[29],crc16_out[30],crc16_out[31], crc16_out[16],crc16_out[17],crc16_out[18],crc16_out[19],crc16_out[20],crc16_out[21],crc16_out[22],crc16_out[23], crc16_out[ 8],crc16_out[ 9],crc16_out[10],crc16_out[11],crc16_out[12],crc16_out[13],crc16_out[14],crc16_out[15], crc16_out[ 0],crc16_out[ 1],crc16_out[ 2],crc16_out[ 3],crc16_out[ 4],crc16_out[ 5],crc16_out[ 6],crc16_out[ 7] };
 assign crc32_outrev = ~{ crc32_out[24],crc32_out[25],crc32_out[26],crc32_out[27],crc32_out[28],crc32_out[29],crc32_out[30],crc32_out[31], crc32_out[16],crc32_out[17],crc32_out[18],crc32_out[19],crc32_out[20],crc32_out[21],crc32_out[22],crc32_out[23], crc32_out[ 8],crc32_out[ 9],crc32_out[10],crc32_out[11],crc32_out[12],crc32_out[13],crc32_out[14],crc32_out[15], crc32_out[ 0],crc32_out[ 1],crc32_out[ 2],crc32_out[ 3],crc32_out[ 4],crc32_out[ 5],crc32_out[ 6],crc32_out[ 7] };
 
 crc32_d64 crc32_d64_inst (
@@ -126,6 +128,17 @@ txd[60],txd[61],txd[62],txd[63]
 }),	// 64bit
 	.crc_out(crc64_out)	// 32bit
 );
+
+`ifdef NO
+crc32_d16 crc32_d16_inst (
+	.data_in({
+txd[00],txd[01],txd[02],txd[03],txd[04],txd[05],txd[06],txd[07],txd[08],txd[09],
+txd[10],txd[11],txd[12],txd[13],txd[14],txd[15]
+}),
+	.crc_in(crc64_out),
+	.crc_out(crc16_out)
+);
+`endif
 
 crc32_d32 crc32_d32_inst (
 	.data_in({
@@ -356,8 +369,8 @@ measure_core # (
 
 assign tx0_ipv4_ip  = ipv4_dstip;
 
-assign xgmii_1_txd = data_shift4 ? {txd3[31:0], txd4[31:0]} : txd3;
-assign xgmii_1_txc = data_shift4 ? {txc3[3:0], txc4[3:0]} : txc3;
+//macchan assign xgmii_1_txd = data_shift4 ? {txd3[31:0], txd4[31:0]} : txd3;
+//macchan assign xgmii_1_txc = data_shift4 ? {txc3[3:0], txc4[3:0]} : txc3;
 //assign xgmii_1_txd = 64'h07_07_07_07_07_07_07_07;
 //assign xgmii_1_txc = 8'hff;
 

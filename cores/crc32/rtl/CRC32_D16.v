@@ -13,14 +13,15 @@
 //-----------------------------------------------------------------------------
 module crc32_d16 (
   input [15:0] data_in,
-  input crc_en,
+  input [31:0] crc_in,
   output [31:0] crc_out,
-  input rst,
-  input clk);
+);
 
-  reg [31:0] lfsr_q,lfsr_c;
+  wire [31:0] lfsr_q;
+  reg [31:0] lfsr_c;
 
-  assign crc_out = lfsr_q;
+  assign lfsr_q = crc_in;
+  assign crc_out = lfsr_c;
 
   always @(*) begin
     lfsr_c[0] = lfsr_q[16] ^ lfsr_q[22] ^ lfsr_q[25] ^ lfsr_q[26] ^ lfsr_q[28] ^ data_in[0] ^ data_in[6] ^ data_in[9] ^ data_in[10] ^ data_in[12];
@@ -58,12 +59,4 @@ module crc32_d16 (
 
   end // always
 
-  always @(posedge clk, posedge rst) begin
-    if(rst) begin
-      lfsr_q <= {32{1'b1}};
-    end
-    else begin
-      lfsr_q <= crc_en ? lfsr_c : lfsr_q;
-    end
-  end // always
 endmodule // crc
